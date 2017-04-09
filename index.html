@@ -1,0 +1,36 @@
+<!DOCTYPE html> 
+<head>
+  <!--
+  Snake II
+  By Daniel de Cordoba
+  --> 
+
+  <title>Snake II</title>
+  <link rel=stylesheet id=style type=text/css href=./css/awesome-snake.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-red.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-blue.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-yellow.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-green.css />
+
+</head>
+<body>
+  <div id="SnakeII" tabindex="0"></div>
+  
+  <!-- debugger, allows to see the grid -->
+  <br><div id="divdebug" style="font-family:Monospace; margin-top:290px;"></div>
+
+  <script type="text/javascript" src="./js/snakeII.js"></script>
+
+  <script type="text/javascript">
+    var w = 15,
+        h = 15,
+        classname = "snake-board blue", // black background, blue snake
+        id = "SnakeII",
+        keys = [87, 65, 83, 68, 80], //WASD-P (the P is for Pause)
+        AI = false;
+        board = new Board(w, h, classname, id),
+        game = new Snake(board, keys, AI);
+    game.initGame([{x: 10, y:10}]);
+  </script>
+</body>
+</html>
