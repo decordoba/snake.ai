@@ -1,0 +1,23 @@
+.yellow .snake-snakebody-head {
+    background-image: url('./images/yellow/20_head_down.png');
+}
+.yellow .snake-snakebody-vertical {
+    background-image: url('./images/yellow/20_vertical.png');
+}
+.yellow .snake-snakebody-turn-l {
+    background-image: url('./images/yellow/20_turn_up_left.png');
+}
+.yellow .snake-snakebody-turn-r {
+    background-image: url('./images/yellow/20_turn_up_right.png');
+}
+.yellow .snake-snakebody-tail {
+    background-image: url('./images/yellow/20_tail_up.png');
+}
+
+.yellow .snake-snakebody-dead {
+   background-image: url('./images/green/20_head_down.png');
+}
+
+.yellow .snake-food-block {
+    background-image: url('./images/food/green.png');    
+}

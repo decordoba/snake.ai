@@ -1,0 +1,74 @@
+/*
+Snake II Theme
+By Daniel de Cordoba Gil
+*/
+
+/* Board */
+.snake-board {
+    margin: 0px;
+    padding: 0px;
+    position: absolute;
+    background-color: black;
+    border: 0px solid rgba(0, 0, 0, 0);
+}
+
+/* Boxes in the board */
+.snake-box {
+    margin: 0px;
+    padding: 0px;
+    background-color: rgba(0, 0, 0, 0);
+    position: absolute;
+    border: 0px solid rgba(0, 0, 0, 0);
+    background-repeat: no-repeat;
+    /*top: -1000px;
+    left: -1000px;*/
+}
+
+/* Generic box */
+.snake-generic-box {
+    background-image: url('./images/snakeblock.png');
+}
+
+/* Obstacles */
+.snake-snakebody-obstacle1{
+    background-image: url('./images/obstacles/yellow.png');
+}
+.snake-snakebody-obstacle2{
+    background-image: url('./images/obstacles/red.png');
+}
+.snake-snakebody-obstacle3{
+    background-image: url('./images/obstacles/green.png');
+}
+.snake-snakebody-obstacle4{
+    background-image: url('./images/obstacles/blue.png');
+}
+
+/* Directions (used to turn images) */
+.snake-direction-left {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+.snake-direction-down {
+    -webkit-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+}
+.snake-direction-right {
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+}
+.snake-direction-up {
+    -webkit-transform: rotate(180deg);
+    -moz-transform: rotate(180deg);
+    -ms-transform: rotate(180deg);
+    -o-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
