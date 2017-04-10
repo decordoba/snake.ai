@@ -143,6 +143,23 @@ function Board(w, h, styleclass, id) {
             this.snake[old_head_idx].setToBody(direction);
         }
         [eaten, death] = this.updateSnakeInGrid(head_pos, old_tail.pos);
+        if (eaten) {
+            if (growth === undefined) {
+                growth = 1;
+            }
+            for (i=0; i<growth; i++) {
+                // console.log("before", this.snake, new_head_idx, new_tail_idx);
+                //new_head and old_tail are the same, they point to the old tail segment
+                this.addSnakeBoxAtIndex(new_head_idx, old_tail);
+                new_head_idx = (new_head_idx + 1) % this.snake.length; //set new tail appendix to head
+                new_tail_idx = (new_tail_idx + 1) % this.snake.length; //move tail too
+                if (new_head_idx < new_tail_idx) {
+                    //compensate that new_head is in position 0 in this.board.snake
+                    new_tail_idx = (new_tail_idx + 1) % this.snake.length;
+                }
+                // console.log("after", this.snake, new_head_idx, new_tail_idx);
+            }
+        }
         // for (i=0; i<this.snake.length; i++) {
             // console.log(this.snake[i].id, this.snake[i].element);
         // }
@@ -171,7 +188,7 @@ function Board(w, h, styleclass, id) {
             console.log("Death");
             death = true;
         }
-        if (!stacked) {
+        if (!stacked && !food_eaten) {
             this.removeBoxFromGrid(pos_to_remove);
         }
         this.addSnakeBoxToGrid(pos_to_add);
@@ -412,7 +429,7 @@ function Snake(board, keys, AI) {
     this.direction = 0;
     this.movements = []; //movements[0]:u/d, movements[1]:l/r
     this.keys = keys;
-    this.speed = 100; //ms between movements
+    this.speed = 500; //ms between movements
     this.isAI = AI;
     this.isPaused = false;
     this.showDebug = true;
