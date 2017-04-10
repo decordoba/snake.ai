@@ -72,3 +72,8 @@ By Daniel de Cordoba Gil
     -o-transform: rotate(180deg);
     transform: rotate(180deg);
 }
+
+/* debug console */
+.div-debug{
+    font-family:Monospace;
+}

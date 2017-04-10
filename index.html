@@ -15,10 +15,8 @@
 </head>
 <body>
   <div id="SnakeII" tabindex="0"></div>
+  <!-- <div id="SnakeIII" tabindex="0"></div> -->
   
-  <!-- debugger, allows to see the grid -->
-  <br><div id="divdebug" style="font-family:Monospace; margin-top:290px;"></div>
-
   <script type="text/javascript" src="./js/snakeII.js"></script>
 
   <script type="text/javascript">
@@ -27,10 +25,22 @@
         classname = "snake-board blue", // black background, blue snake
         id = "SnakeII",
         keys = [87, 65, 83, 68, 80], //WASD-P (the P is for Pause)
-        AI = false;
+        AI = true,
         board = new Board(w, h, classname, id),
         game = new Snake(board, keys, AI);
-    game.initGame([{x: 10, y:10}]);
+    game.initGame([]);
+
+    /*
+    var classname2 = "snake-board green", // black background, blue snake
+        id2 = "SnakeIII",
+        keys2 = [87, 65, 83, 68, 80], //WASD-P (the P is for Pause)
+        AI2 = true,
+        board2 = new Board(w, h, classname2, id2),
+        game2 = new Snake(board2, keys2, AI2);
+    game2.initGame([{x: 4, y:4}, {x: 10, y:4}, //eyes
+                    {x: 4, y:9}, {x: 5, y:10}, {x: 6, y:11}, {x: 7, y:11}, {x: 8, y:11}, {x: 9, y:10}, {x: 10, y:9}, //mouth
+                    {x: 7, y:7}]); //nose
+    */
   </script>
 </body>
 </html>
