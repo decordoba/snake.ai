@@ -422,14 +422,14 @@ function Board(w, h, styleclass, id) {
     }
 }
 
-function Snake(board, keys, AI) {
+function Snake(board, keys, speed, AI) {
     this.board = board;
     this.head = 0;
     this.tail = 0;
     this.direction = 0;
     this.movements = []; //movements[0]:u/d, movements[1]:l/r
     this.keys = keys;
-    this.speed = 500; //ms between movements
+    this.speed = speed; //ms between movements
     this.isAI = AI;
     this.isPaused = false;
     this.showDebug = true;
@@ -508,7 +508,9 @@ function Snake(board, keys, AI) {
         window.addEventListener("keydown", function(evt) {
             me.keyListener(evt);
         }, false);
-        this.scheduleNextStep();
+        window.onload = function() {
+            me.scheduleNextStep();
+        }
     }
     
     this.scheduleNextStep = function() {
@@ -526,7 +528,7 @@ function Snake(board, keys, AI) {
             allowed_pos,
             dist,
             min_dist = this.board.w + this.board.h,
-            best_dir = 0;
+            best_dir = this.direction;
         
         if (this.isPaused) {
             //advance time will not do anything when paused
@@ -605,3 +607,20 @@ function Snake(board, keys, AI) {
         this.scheduleNextStep();
     }
 }
+
+/*
+TODO:
+    1. Allow snake to grow several segments when eating food
+    2. Control stacked, so if I eat myself, and continue playing, that place does not become a hole
+  2.5. If snake eats itself, make it go to somewhere smart, not always vertically (or just, make it go straight)
+    3. Test having more than one food dot
+    4. Add images of body segment which has eaten food
+    5. Implement tongue
+    6. Handle case in which one of the positions where the snake can go is where its tail is. From grid its seems that it is not allowed but in next movement it would be because tail would not be there anymore (carefull, stacked!)
+    7. Implement moving food
+    8. Maybe load images before starting the game, it looks nicer
+    9. Implement and test multiplayer game
+   10. Create crazy game modes: sth that when you eat you put obstacle in opponent map, sth that when you eat a food you start growing from your tail and never stop,
+       sth interacting with different snakes / boards (2 snakes, one food, race) (change board when eating food) (powerups (invisibility, strength, lives, speed, smaller...))
+   11. Do AI: learning from seeing play, learning from trial and error, Astar, smart Astar that can complete board, rules to always win...
+*/
