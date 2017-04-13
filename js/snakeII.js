@@ -276,8 +276,20 @@ function Board(w, h, styleclass, id) {
     }
     this.getAllMovements = function(pos) {
         // from pos, return all directions (movements that kill you or don't') and resulting positions
-        var dir, new_pos = [], ok_dir = [];
+        var dir, new_pos = [], ok_dir = [], ko_dir = (dir + 2) % 4;
         for (dir=0; dir<4; dir++) {
+            new_pos.push(this.getNewHeadPosition(pos, dir));
+            ok_dir.push(dir);
+        }
+        return [ok_dir, new_pos];
+    }
+    this.getAllAllowedMovements = function(pos, dir) {
+        // from pos and dir, return all allowed directions (everywhere except 180 deg turn) and resulting positions
+        var dir, new_pos = [], ok_dir = [], ko_dir = (dir + 2) % 4;
+        for (dir=0; dir<4; dir++) {
+            if (dir == ko_dir) {
+                continue;
+            }
             new_pos.push(this.getNewHeadPosition(pos, dir));
             ok_dir.push(dir);
         }
@@ -587,8 +599,8 @@ function Snake(board, keys, speed, AI, growth) {
         if (this.isAI) {
             [allowed_dirs, allowed_pos] = this.board.getNoDeathMovements(this.board.getSnakePosition(this.head));
             if (allowed_dirs.length === 0) {
-                console.log("Trapped --> Let's commit suicide'");
-                [allowed_dirs, allowed_pos] = this.board.getAllMovements(this.board.getSnakePosition(this.head));
+                console.log("Trapped --> I'll have to kill myself...");
+                [allowed_dirs, allowed_pos] = this.board.getAllAllowedMovements(this.board.getSnakePosition(this.head), this.direction);
                 //this.isPaused = true;
             }
             for (i=0; i<allowed_dirs.length; i++) {
