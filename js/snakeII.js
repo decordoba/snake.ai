@@ -33,6 +33,7 @@ function Board(w, h, styleclass, id) {
         this.initSnake();
         //this.setPosToFood(new Position(6, 6));
         this.addRandomFood();
+        this.addRandomFood();
     }
     this.resetGrid = function() {
         // set grid to all zeros
@@ -569,7 +570,7 @@ function Snake(board, keys, speed, AI, growth) {
     this.advanceTime = function() {
         // move time one step, so that the game advances
         var tmp,
-            i,
+            i, j,
             food_pos,
             allowed_dirs,
             allowed_pos,
@@ -584,7 +585,6 @@ function Snake(board, keys, speed, AI, growth) {
         }
         
         if (this.isAI) {
-            food_pos = this.board.food[0].pos;
             [allowed_dirs, allowed_pos] = this.board.getNoDeathMovements(this.board.getSnakePosition(this.head));
             if (allowed_dirs.length === 0) {
                 console.log("Trapped --> Let's commit suicide'");
@@ -592,10 +592,13 @@ function Snake(board, keys, speed, AI, growth) {
                 //this.isPaused = true;
             }
             for (i=0; i<allowed_dirs.length; i++) {
-                dist = this.board.getManhattanDistance(food_pos, allowed_pos[i]);
-                if (dist < min_dist) {
-                    min_dist = dist;
-                    best_dir = allowed_dirs[i];
+                for (j=0; j<this.board.food.length; j++) {
+                    food_pos = this.board.food[j].pos;
+                    dist = this.board.getManhattanDistance(food_pos, allowed_pos[i]);
+                    if (dist < min_dist) {
+                        min_dist = dist;
+                        best_dir = allowed_dirs[i];
+                    }
                 }
             }
             this.direction = best_dir;
@@ -658,10 +661,6 @@ function Snake(board, keys, speed, AI, growth) {
 
 /*
 TODO:
-    1. Allow snake to grow several segments when eating food
-    2. Control stacked, so if I eat myself, and continue playing, that place does not become a hole
-  2.5. If snake eats itself, make it go to somewhere smart, not always vertically (or just, make it go straight)
-    3. Test having more than one food dot
     4. Add images of body segment which has eaten food
     5. Implement tongue
     6. Handle case in which one of the positions where the snake can go is where its tail is. From grid its seems that it is not allowed but in next movement it would be because tail would not be there anymore (carefull, stacked!)
