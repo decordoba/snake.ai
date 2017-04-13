@@ -25,15 +25,21 @@ function Board(w, h, styleclass, id) {
     this.stacked_positions = {};    //when snake grows, cell position with more than one snake segment
     this.stacked_number = 0;        //number of stacked segments in stacked_positions
     
-    this.initBoard = function(obstacles) {
+    this.initBoard = function(obstacles, num_food) {
         // initialize board with obstacles and snake
+        var i;
         this.resetGrid();
         this.createBoard();
         this.addObstacles(obstacles);
         this.initSnake();
         //this.setPosToFood(new Position(6, 6));
-        this.addRandomFood();
-        this.addRandomFood();
+        if (num_food == undefined || num_food < 2) {
+            this.addRandomFood();
+        } else {
+            for (i=0; i<num_food; i++) {
+                this.addRandomFood();
+            }
+        }
     }
     this.resetGrid = function() {
         // set grid to all zeros
@@ -479,7 +485,7 @@ function Board(w, h, styleclass, id) {
     }
 }
 
-function Snake(board, keys, speed, AI, growth) {
+function Snake(board, keys, speed, AI, growth, numFood) {
     this.board = board;
     this.head = 0;
     this.tail = 0;
@@ -489,6 +495,7 @@ function Snake(board, keys, speed, AI, growth) {
     this.speed = speed; //ms between movements
     this.isAI = AI;
     this.growth = growth; //# segments the snake grows when it eats a food
+    this.numFood = numFood || 1; //# food dots available at any moment
     this.isPaused = false;
     this.showDebug = true;
     this.debugElement;
@@ -496,7 +503,7 @@ function Snake(board, keys, speed, AI, growth) {
     this.initGame = function(obstacles) {
         // start game: initialize board, and launch snake movement
         var me = this;
-        this.board.initBoard(obstacles);
+        this.board.initBoard(obstacles, this.numFood);
         // Assumes that snake has first_pos:head and last_pos:tail
         this.head = 0;
         this.tail = this.board.snake.length - 1;
