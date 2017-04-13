@@ -26,9 +26,10 @@
         id = "SnakeII",
         keys = [87, 65, 83, 68, 80], //WASD-P (the P is for Pause)
         speed = 300,
+        growth = 1,
         AI = true,
         board = new Board(w, h, classname, id),
-        game = new Snake(board, keys, speed, AI);
+        game = new Snake(board, keys, speed, AI, growth);
     game.initGame([]);
 
     /*

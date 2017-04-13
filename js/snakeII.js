@@ -22,8 +22,8 @@ function Board(w, h, styleclass, id) {
     this.food = [];                 //boxes that make the food
     this.obstacles = [];            //boxes than make the obstacles
     this.element;                   //div element used as the board
-    this.stacked_position;          //when snake grows, cell position with more than one snake segment
-    this.stacked_number = 0;        //number of stacked segments in stacked_position
+    this.stacked_positions = {};    //when snake grows, cell position with more than one snake segment
+    this.stacked_number = 0;        //number of stacked segments in stacked_positions
     
     this.initBoard = function(obstacles) {
         // initialize board with obstacles and snake
@@ -98,7 +98,6 @@ function Board(w, h, styleclass, id) {
     this.addSnakeBoxToGrid = function(pos) {
         // warning, does not check if pos is ok
         this.grid[pos.x][pos.y] = 2;
-        console.log("Added to grid", pos);
     }
     this.addObstacleToGrid = function(pos) {
         // warning, does not check if pos is ok
@@ -142,11 +141,8 @@ function Board(w, h, styleclass, id) {
             //whether we eat food or not, we must erase the old head
             this.snake[old_head_idx].setToBody(direction);
         }
-        [eaten, death] = this.updateSnakeInGrid(head_pos, old_tail.pos);
+        [eaten, death] = this.updateSnakeInGrid(head_pos, old_tail.pos, growth);
         if (eaten) {
-            if (growth === undefined) {
-                growth = 1;
-            }
             for (i=0; i<growth; i++) {
                 // console.log("before", this.snake, new_head_idx, new_tail_idx);
                 //new_head and old_tail are the same, they point to the old tail segment
@@ -171,24 +167,30 @@ function Board(w, h, styleclass, id) {
         this.snake[new_head_idx].setPosition(head_pos);
         return {head: new_head_idx, tail: new_tail_idx};
     }
-    this.updateSnakeInGrid = function(pos_to_add, pos_to_remove) {
+    this.updateSnakeInGrid = function(pos_to_add, pos_to_remove, growth) {
         // update grid after a snake move, and take appropriate actions if death or food eaten
         var stacked = false, food_eaten = false, death = false;
-        if (this.stacked_number > 0 && pos_to_remove.x == stacked_position.x && pos_to_remove.y == stacked_position.y) {
-            this.stacked_number -= 1;
-            stacked = true;
-        }
         if (this.getGridValue(pos_to_add) < 0) {
             //food eaten
             console.log("Food eaten");
             this.moveFood(pos_to_add);
             food_eaten = true;
+            if (growth > 0) {
+                this.updateStackedPos(pos_to_remove, growth);
+            }
         } else if (this.getGridValue(pos_to_add) > 0) {
             //death: crash with obstacle (1) or snake (2)
             console.log("Death");
             death = true;
+            if (this.getGridValue(pos_to_add) == 2) { //2:snake
+                this.updateStackedPos(pos_to_add, 1);
+            }
         }
-        if (!stacked && !food_eaten) {
+        if (this.stacked_number > 0 && this.getStackedNumberInPos(pos_to_remove) > 0) {
+            this.decrementStackedPos(pos_to_remove);
+            stacked = true;
+        }
+        if (!stacked) {
             this.removeBoxFromGrid(pos_to_remove);
         }
         this.addSnakeBoxToGrid(pos_to_add);
@@ -282,6 +284,39 @@ function Board(w, h, styleclass, id) {
             }
         }
         return [ok_dir, new_pos];
+    }
+    this.getStackedNumberInPos = function(pos) {
+        // return number of stacked segments in a position pos
+        var value, key = pos.x + "_" + pos.y;
+        value = this.stacked_positions[key];
+        if (value == undefined) {
+            value = 0;
+        }
+        return value;
+    }
+    this.decrementStackedPos = function(pos) {
+        // substract one to the number of stacked segments in a position pos
+        var value, key = pos.x + "_" + pos.y;
+        value = this.stacked_positions[key];
+        if (value == 1 || value == undefined) {
+            delete this.stacked_positions[key];
+        } else {
+            this.stacked_positions[key] = value - 1;
+        }
+        if (value > 0) {
+            this.stacked_number -= 1;
+        }
+    }
+    this.updateStackedPos = function(pos, update) {
+        // add update to the number of stacked segments in position pos
+        var value, key = pos.x + "_" + pos.y;
+        value = this.stacked_positions[key];
+        if (value == undefined) {
+            this.stacked_positions[key] = update;
+        } else {
+            this.stacked_positions[key] = value + update;
+        }
+        this.stacked_number += update;
     }
 
     // define cell constructor
@@ -422,7 +457,7 @@ function Board(w, h, styleclass, id) {
     }
 }
 
-function Snake(board, keys, speed, AI) {
+function Snake(board, keys, speed, AI, growth) {
     this.board = board;
     this.head = 0;
     this.tail = 0;
@@ -431,12 +466,32 @@ function Snake(board, keys, speed, AI) {
     this.keys = keys;
     this.speed = speed; //ms between movements
     this.isAI = AI;
+    this.growth = growth; //# segments the snake grows when it eats a food
     this.isPaused = false;
     this.showDebug = true;
     this.debugElement;
     
+    this.initGame = function(obstacles) {
+        // start game: initialize board, and launch snake movement
+        var me = this;
+        this.board.initBoard(obstacles);
+        // Assumes that snake has first_pos:head and last_pos:tail
+        this.head = 0;
+        this.tail = this.board.snake.length - 1;
+        if (this.growth === undefined) {
+            this.growth = 1;
+        }
+        this.direction = this.board.snake[this.head].dir;
+        window.addEventListener("keydown", function(evt) {
+            me.keyListener(evt);
+        }, false);
+        window.onload = function() {
+            me.scheduleNextStep();
+        }
+    }
+
     this.keyListener = function(evt) {
-        // when key is pressed, takes appropiate action
+        // when key is pressed, takes appropriate action
         var key, dir = -1, pause_key = false;
         if (!evt) {
             var evt = window.event;
@@ -496,23 +551,6 @@ function Snake(board, keys, speed, AI) {
         }
     }
     
-    this.initGame = function(obstacles) {
-        // start game: initialize board, and launch snake movement
-        var me = this;
-        console.log("Starting game");
-        this.board.initBoard(obstacles);
-        // Assumes that snake has first_pos:head and last_pos:tail
-        this.head = 0;
-        this.tail = this.board.snake.length - 1;
-        this.direction = this.board.snake[this.head].dir;
-        window.addEventListener("keydown", function(evt) {
-            me.keyListener(evt);
-        }, false);
-        window.onload = function() {
-            me.scheduleNextStep();
-        }
-    }
-    
     this.scheduleNextStep = function() {
         // schedule next advancement of time
         var me = this;
@@ -568,7 +606,7 @@ function Snake(board, keys, speed, AI) {
             // var aaa = ""; if(i==this.head){aaa="HEAD";}else if(i==this.tail){aaa="TAIL";}
             // console.log(JSON.stringify(this.board.snake[i].id), aaa);
         // }
-        tmp = this.board.moveSnake(this.head, this.tail, this.direction);
+        tmp = this.board.moveSnake(this.head, this.tail, this.direction, this.growth);
         this.head = tmp.head;
         this.tail = tmp.tail;
         // console.log("SNAKE AFTER", this.head, this.tail);
