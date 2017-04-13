@@ -273,6 +273,15 @@ function Board(w, h, styleclass, id) {
         dist.y = Math.min(dist.y, this.h - dist.y);
         return dist.x + dist.y;
     }
+    this.getAllMovements = function(pos) {
+        // from pos, return all directions (movements that kill you or don't') and resulting positions
+        var dir, new_pos = [], ok_dir = [];
+        for (dir=0; dir<4; dir++) {
+            new_pos.push(this.getNewHeadPosition(pos, dir));
+            ok_dir.push(dir);
+        }
+        return [ok_dir, new_pos];
+    }
     this.getNoDeathMovements = function(pos) {
         // from pos, return valid directions (movements that don't kill you) and resulting positions
         var tmp_pos, dir, new_pos = [], ok_dir = [];
@@ -578,8 +587,9 @@ function Snake(board, keys, speed, AI, growth) {
             food_pos = this.board.food[0].pos;
             [allowed_dirs, allowed_pos] = this.board.getNoDeathMovements(this.board.getSnakePosition(this.head));
             if (allowed_dirs.length === 0) {
-                console.log("Trapped", allowed_dirs, JSON.stringify(this.board.grid));
-                this.isPaused = true;
+                console.log("Trapped --> Let's commit suicide'");
+                [allowed_dirs, allowed_pos] = this.board.getAllMovements(this.board.getSnakePosition(this.head));
+                //this.isPaused = true;
             }
             for (i=0; i<allowed_dirs.length; i++) {
                 dist = this.board.getManhattanDistance(food_pos, allowed_pos[i]);
