@@ -13,6 +13,24 @@
 .green .snake-snakebody-tail {
     background-image: url('./images/green/20_tail_up.png');
 }
+.green .snake-snakebody-vertical-fat {
+    background-image: url('./images/green/20_vertical_fat.png');
+}
+.green .snake-snakebody-turn-l-fat {
+    background-image: url('./images/green/20_turn_up_left_fat.png');
+}
+.green .snake-snakebody-turn-r-fat {
+    background-image: url('./images/green/20_turn_up_right_fat.png');
+}
+.green .snake-snakebody-tail-fat {
+    background-image: url('./images/green/20_tail_up_fat.png');
+}
+.green .snake-snakebody-open-mouth {
+}
+.green .snake-snakebody-head-tongue {
+}
+.green .snake-snakebody-tongue {
+}
 
 .green .snake-snakebody-dead {
    background-image: url('./images/yellow/20_head_down.png');

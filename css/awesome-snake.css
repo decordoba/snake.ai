@@ -43,6 +43,11 @@ By Daniel de Cordoba Gil
     background-image: url('./images/obstacles/blue.png');
 }
 
+/* Error block */
+.snake-snakebody-error{
+    background-image: url('./images/deadblock.png');
+}
+
 /* Directions (used to turn images) */
 .snake-direction-left {
     -webkit-transform: rotate(90deg);

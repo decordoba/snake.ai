@@ -1,7 +1,8 @@
 /*
-Snake II (based on the original NOKIA game)
+Snake EX2 (based on the original NOKIA game)
 By Daniel de Cordoba Gil
 http://github.com/decordoba
+My goal: something in the lines of https://www.youtube.com/watch?v=EBYIJ1GPvG8
 */
 
 // define position constructor
@@ -172,6 +173,9 @@ function Board(w, h, styleclass, id) {
         }
         this.snake[new_head_idx].setToHead(direction);
         this.snake[new_head_idx].setPosition(head_pos);
+        if (eaten) {
+            this.snake[new_head_idx].makeFat();
+        }
         return {head: new_head_idx, tail: new_tail_idx};
     }
     this.updateSnakeInGrid = function(pos_to_add, pos_to_remove, growth) {
@@ -357,6 +361,7 @@ function Board(w, h, styleclass, id) {
         this.imageclass = "";           //class for box image
         this.dir = dir;                 //0:up, 1:left, 2:down, 3:right
         this.dirclass = "";             //class for image orientation
+        this.fat = false;               //whether a snake segment is fat (has eaten food) or not
         this.id = id;                   //unique id of the box
         this.element;                   //element in the document
         
@@ -409,22 +414,28 @@ function Board(w, h, styleclass, id) {
                     this.dirclass = "snake-snakebody-open-mouth";
                     break;
                 case 6: // Body Eaten
-                    this.dirclass = "snake-snakebody-body-fat";
+                    this.dirclass = "snake-snakebody-vertical-fat";
                     break;
-                case 7: // Tail Eaten
+                case 7: // Turn Left Eaten
+                    this.dirclass = "snake-snakebody-turn-l-fat";
+                    break;
+                case 8: // Turn Right Eaten
+                    this.dirclass = "snake-snakebody-turn-r-fat";
+                    break;
+                case 9: // Tail Eaten
                     this.dirclass = "snake-snakebody-tail-fat";
-                    break;
-                case 8: // Head Tongue
-                    this.dirclass = "snake-snakebody-head-tongue";
-                    break;
-                case 9: // Tongue
-                    this.dirclass = "snake-snakebody-tongue";
                     break;
                 case 10: // Obstacle
                     this.dirclass = "snake-snakebody-obstacle1";
                     break;
                 case 11: // Food
                     this.dirclass = "snake-food-block";
+                    break;
+                case 12: // Head Tongue
+                    this.dirclass = "snake-snakebody-head-tongue";
+                    break;
+                case 13: // Tongue
+                    this.dirclass = "snake-snakebody-tongue";
                     break;
                 default: //Error
                     this.dirclass = "snake-snakebody-error";
@@ -438,10 +449,18 @@ function Board(w, h, styleclass, id) {
             this.element.style.left = this.px_pos.x + "px";
             this.element.style.top = this.px_pos.y + "px";
         }
+        this.makeFat = function(fat) {
+            // makes snake segment fat (or unfat if set to false)
+            if (fat === undefined) {
+                fat = true;
+            }
+            this.fat = fat;
+        }
         this.setToHead = function(dir) {
             // set box style to head
             this.dir = dir;
             this.image = 0; //head
+            this.fat = false; //make sure a new head is not fat unless purposely set later
             this.updateClass();
         }
         this.setToBody = function(head_dir) {
@@ -457,16 +476,22 @@ function Board(w, h, styleclass, id) {
                     this.image = 2; //turn right
                 }
             }
+            if (this.fat) {
+                this.image += 5;
+            }
             this.updateClass();
         }
         this.setToTail = function() {
             // set box to tail and correct tail direction after a turn
-            if (this.image == 2) {
+            if (this.image == 2 || this.image == 2 + 5) { //2nd condition considers fat
                 this.dir = (this.dir + 3) % 4;
-            } else if (this.image == 3) {
+            } else if (this.image == 3 || this.image == 3 + 5) { //2nd condition considers fat
                 this.dir = (this.dir + 1) % 4;
             }
             this.image = 4; //tail
+            if (this.fat) {
+                this.image += 5;
+            }
             this.updateClass();
         }
         this.setPosition = function(new_pos) {
