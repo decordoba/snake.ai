@@ -28,8 +28,7 @@
 .red .snake-snakebody-open-mouth {
 }
 .red .snake-snakebody-head-tongue {
-}
-.red .snake-snakebody-tongue {
+    background-image: url('./images/red/20_head_down_tongue.png');
 }
 
 .red.snake-snakebody-dead {

@@ -43,7 +43,15 @@ By Daniel de Cordoba Gil
     background-image: url('./images/obstacles/blue.png');
 }
 
-/* Error block */
+/* Tongue boxes */
+.snake-snakebody-tongue-body {
+    background-image: url('./images/tongue/tongue_body.png');
+}
+.snake-snakebody-tongue-tip {
+    background-image: url('./images/tongue/tongue_tip.png');
+}
+
+/* Error box */
 .snake-snakebody-error{
     background-image: url('./images/deadblock.png');
 }
