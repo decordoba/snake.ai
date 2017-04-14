@@ -206,9 +206,7 @@ function Board(w, h, styleclass, id) {
             //death: crash with obstacle (1) or snake (2)
             console.log("Death");
             death = true;
-            if (this.getGridValue(pos_to_add) == 2) { //2:snake
-                this.updateStackedPos(pos_to_add, 1);
-            }
+            this.updateStackedPos(pos_to_add, 1);
         }
         if (this.stacked_number > 0 && this.getStackedNumberInPos(pos_to_remove) > 0) {
             this.decrementStackedPos(pos_to_remove);
@@ -217,7 +215,9 @@ function Board(w, h, styleclass, id) {
         if (!stacked) {
             this.removeBoxFromGrid(pos_to_remove);
         }
-        this.addSnakeBoxToGrid(pos_to_add);
+        if (!death) {
+            this.addSnakeBoxToGrid(pos_to_add);
+        }
         return [food_eaten, death];
     }
     this.getNewHeadPosition = function(pos, dir) {
