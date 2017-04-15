@@ -35,7 +35,8 @@ function Board(w, h, styleclass, id) {
         this.addObstacles(obstacles);
         this.initSnake();
         this.initTongue();
-        //this.setPosToFood(new Position(6, 6));
+        // this.setPosToFood(new Position(8, 2));
+        // this.setPosToFood(new Position(9, 2));
         if (num_food == undefined || num_food < 2) {
             this.addRandomFood();
         } else {
@@ -78,7 +79,7 @@ function Board(w, h, styleclass, id) {
     }
     this.initSnake = function() {
         // set snake to initial positions, add it to grid and create (and show) snake elements
-        var positions = [{x: 4, y:2}, {x: 3, y:2}, {x: 2, y:2}],
+        var positions = [{x:4, y:2}, {x:3, y:2}, {x:2, y:2}],
             directions = [3, 3, 3], //0:up, 1:left, 2:down, 3:right
             snake_parts = [0, 1, 4], //0:head, 1:body, 2:turnL, 3:turnR, 4:tail
             i, new_box;
@@ -138,23 +139,40 @@ function Board(w, h, styleclass, id) {
         box.createBox(this.element);
         return box;
     }
-    this.moveFood = function(old_food) {
-        // move food to a new free random position
-        var pos = this.findRandomFreePosition(), i;
-        while (pos.x === old_food.x && pos.y === old_food.y) {
-            pos = findRandomFreePosition();
+    this.moveFood = function(old_food, ko_positions) {
+        // move food to a new free random position, which cannot be in ko_positions
+        var pos = this.findRandomFreePosition(), i, pos_ok;
+        if (ko_positions === undefined) {
+            while (pos.x === old_food.x && pos.y === old_food.y) {
+                pos = this.findRandomFreePosition();
+            }
+        } else {
+            pos_ok = false;
+            while (!pos_ok) {
+                pos_ok = true;
+                for (i=0; i<ko_positions.length; i++) {
+                    if (pos.x === ko_positions[i].x && pos.y === ko_positions[i].y) {
+                        pos = this.findRandomFreePosition();
+                        pos_ok = false;
+                        break;
+                    }
+                }
+            }
         }
         for (i=0; i<this.food.length; i++) {
             if (this.food[i].pos.x === old_food.x && this.food[i].pos.y === old_food.y) {
                 break;
             }
         }
+        if (this.getGridValue(old_food) < 0) {
+            this.removeBoxFromGrid(old_food);
+        }
         this.food[i].setPosition(pos);
         this.addFoodToGrid(pos);
     }
     this.moveSnake = function(old_head_idx, new_head_idx, direction, use_tongue, growth) {
         // move snake towards direction, save new head in old tail and move its position, so it seems that snake moves
-        var eaten, death, i,
+        var eaten, death, i, tongue_pos, eaten_tongue = 0,
             new_tail_idx = (new_head_idx - 1 + this.snake.length) % this.snake.length,
             head_pos = this.getNewHeadPosition(this.snake[old_head_idx].pos, direction),
             old_tail = this.snake[new_head_idx];
@@ -163,13 +181,20 @@ function Board(w, h, styleclass, id) {
             this.snake[old_head_idx].setToBody(direction);
         }
         if (use_tongue) {
-            this.useTongue(head_pos, direction);
+            tongue_pos = this.useTongue(head_pos, direction);
+            for (i=0; i<tongue_pos.length; i++) {
+                if (this.getGridValue(tongue_pos[i]) < 0) { //food
+                    eaten_tongue += 1;
+                    console.log("Food eaten with tongue");
+                    this.moveFood(tongue_pos[i], tongue_pos);
+                }
+            }
         } else {
             this.hideTongue();
         }
         [eaten, death] = this.updateSnakeInGrid(head_pos, old_tail.pos, growth);
         if (eaten) {
-            this.moveFood(head_pos);
+            this.moveFood(head_pos, tongue_pos); //if we eat while we use tongue, food will not appear in tongue
             for (i=0; i<growth; i++) {
                 //new_head and old_tail are the same, they point to the old tail segment
                 this.addSnakeBoxAtIndex(new_head_idx, old_tail);
@@ -187,7 +212,7 @@ function Board(w, h, styleclass, id) {
         }
         this.snake[new_head_idx].setToHead(direction, use_tongue);
         this.snake[new_head_idx].setPosition(head_pos);
-        if (eaten) {
+        if (eaten || eaten_tongue > 0) {
             this.snake[new_head_idx].makeFat();
         }
         return {head: new_head_idx, tail: new_tail_idx};
@@ -258,13 +283,15 @@ function Board(w, h, styleclass, id) {
     }
     this.useTongue = function(pos, dir) {
         // use the tongue (show it and eat food in front of pos)
-        var i, prev_pos = pos;
+        var i, prev_pos = pos, all_pos = [];
         for (i=0; i<this.tongue.length; i++) {
             prev_pos = this.getNewHeadPosition(prev_pos, dir);
             this.tongue[i].dir = dir;
             this.tongue[i].updateClass();
             this.tongue[i].setPosition(prev_pos);
+            all_pos.push(prev_pos);
         }
+        return all_pos;
     }
     this.hideTongue = function() {
         // hide the tongue
@@ -689,9 +716,6 @@ function Snake(board, keys, speed, AI, growth, numFood) {
                         best_dir = allowed_dirs[i];
                     }
                 }
-                if (this.board.snake.length > this.board.w  + 1) {
-                    break;
-                }
             }
             this.direction = best_dir;
         } else {
@@ -762,12 +786,12 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
-    3. Make sure grid works well with obstacles
-    4. Add images of body segment which has eaten food
-    5. Implement tongue
-    6. Handle case in which one of the positions where the snake can go is where its tail is. From grid its seems that it is not allowed but in next movement it would be because tail would not be there anymore (carefull, stacked!)
-    7. Implement moving food
     8. Maybe load images before starting the game, it looks nicer
+    7. Implement moving food
+  7.5. Handle case where there is no room for new food
+  7.6. Head should always be on top (increase z-index)
+  7.7 Change color when dying
+    6. Handle case in which one of the positions where the snake can go is where its tail is. From grid its seems that it is not allowed but in next movement it would be because tail would not be there anymore (carefull, stacked!)
     9. Implement and test multiplayer game
    10. Create crazy game modes: sth that when you eat you put obstacle in opponent map, sth that when you eat a food you start growing from your tail and never stop,
        sth interacting with different snakes / boards (2 snakes, one food, race) (change board when eating food) (powerups (invisibility, strength, lives, speed, smaller...))
