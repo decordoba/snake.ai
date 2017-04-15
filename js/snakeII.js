@@ -32,6 +32,7 @@ function Board(w, h, styleclass, id) {
         var i;
         this.resetGrid();
         this.createBoard();
+        this.loadImages();
         this.addObstacles(obstacles);
         this.initSnake();
         this.initTongue();
@@ -99,6 +100,18 @@ function Board(w, h, styleclass, id) {
             new_box = this.addBox(positions[i], directions[i], snake_parts[i], 15, "snake_tongue_" + i); //z-index:15
             this.tongue.push(new_box);
         }
+    }
+    this.loadImages = function() {
+        // use dummy box to load all images, so they are stored in cache
+        var new_box, i, num_imgs = 16;
+        for (i=0; i<num_imgs; i++) {
+            new_box = this.addBox(new Position(-10000, -10000), 0, i, 0, "dummy_box_" + i); //z-index:0
+        }
+        setTimeout(function(){
+            for (i=0; i<num_imgs; i++) {
+                document.getElementById("dummy_box_" + i).remove();
+            }
+        }, 5000);
     }
     this.positionIsValid = function(pos) {
         // return whether pos is in grid
@@ -286,8 +299,7 @@ function Board(w, h, styleclass, id) {
         var i, prev_pos = pos, all_pos = [];
         for (i=0; i<this.tongue.length; i++) {
             prev_pos = this.getNewHeadPosition(prev_pos, dir);
-            this.tongue[i].dir = dir;
-            this.tongue[i].updateClass();
+            this.tongue[i].setDirToValue(dir);
             this.tongue[i].setPosition(prev_pos);
             all_pos.push(prev_pos);
         }
@@ -515,6 +527,22 @@ function Board(w, h, styleclass, id) {
                 fat = true;
             }
             this.fat = fat;
+        }
+        this.setImageToValue = function(value) {
+            // set box image to value
+            this.image = value;
+            this.updateClass();
+        }
+        this.setDirToValue = function(value) {
+            // set box dir to value
+            this.dir = value;
+            this.updateClass();
+        }
+        this.setImageAndDirToValue = function(image, dir) {
+            // set box image and dir to value
+            this.image = image;
+            this.dir = dir;
+            this.updateClass();
         }
         this.setToHead = function(dir, tongue, open_mouth) {
             // set box style to head
@@ -786,7 +814,7 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
-    8. Maybe load images before starting the game, it looks nicer
+    5. Make sure snake grows when eating with tongue
     7. Implement moving food
   7.5. Handle case where there is no room for new food
   7.6. Head should always be on top (increase z-index)
