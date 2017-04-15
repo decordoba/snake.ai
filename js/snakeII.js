@@ -208,6 +208,8 @@ function Board(w, h, styleclass, id) {
         [eaten, death] = this.updateSnakeInGrid(head_pos, old_tail.pos, growth);
         if (eaten) {
             this.moveFood(head_pos, tongue_pos); //if we eat while we use tongue, food will not appear in tongue
+        }
+        if (eaten || eaten_tongue > 0) {
             for (i=0; i<growth; i++) {
                 //new_head and old_tail are the same, they point to the old tail segment
                 this.addSnakeBoxAtIndex(new_head_idx, old_tail);
@@ -814,7 +816,7 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
-    5. Make sure snake grows when eating with tongue
+    6. Make nice looking snake
     7. Implement moving food
   7.5. Handle case where there is no room for new food
   7.6. Head should always be on top (increase z-index)
