@@ -15,7 +15,7 @@ function Position(x, y) {
 function Board(w, h, styleclass, id) {
     this.w = w;                     //width grid
     this.h = h;                     //height grid
-    this.side = 20;                 //px, width/height of every box
+    this.side;                      //px, width/height of every box
     this.class = styleclass;        //class for box image
     this.id = id;                   //unique id of the box
     this.grid = [];                 //board with positions
@@ -31,6 +31,7 @@ function Board(w, h, styleclass, id) {
         // initialize board with obstacles and snake
         var i;
         this.resetGrid();
+        this.getBoxesSide();
         this.createBoard();
         this.loadImages();
         this.addObstacles(obstacles);
@@ -99,6 +100,26 @@ function Board(w, h, styleclass, id) {
         for (i=0; i<positions.length; i++) {
             new_box = this.addBox(positions[i], directions[i], snake_parts[i], 15, "snake_tongue_" + i); //z-index:15
             this.tongue.push(new_box);
+        }
+    }
+    this.getBoxesSide = function() {
+        // get head box image, and use its side as the side for all boxes in board
+        var box, container, image_src, image;
+        if (document.defaultView && document.defaultView.getComputedStyle) {
+            container = document.createElement("div");
+            container.className = this.class;
+            container.id = "tmp_div";
+            document.body.appendChild(container);
+            box = new Box(new Position(-10000, -10000), 0, 0, 0, 0, "tmp_box"); //z-index:0
+            box.createBox(container);
+            image_src = document.defaultView.getComputedStyle(box.element, null).backgroundImage.replace(/url\((['"])?(.*?)\1\)/gi, '$2').split(',')[0];
+            image = new Image();
+            image.src = image_src;
+            this.side = Math.max(image.width, image.height) || 20;
+            container.remove();
+        } else {
+            // In IE, the size will be 20 always (anyway, I don't expect many players to use IE)
+            this.side = 20;
         }
     }
     this.loadImages = function() {
