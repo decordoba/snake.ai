@@ -12,6 +12,10 @@ By Daniel de Cordoba Gil
     border: 0px solid rgba(0, 0, 0, 0);
 }
 
+.board-original {
+    background-color: rgba(238, 221, 187, 1);
+}
+
 /* Boxes in the board */
 .snake-box {
     margin: 0px;
