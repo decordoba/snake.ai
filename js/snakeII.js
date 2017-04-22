@@ -75,7 +75,7 @@ function Board(w, h, styleclass, id) {
         var new_box, i;
         for (i=0; i<obstacles.length; i++) {
             this.addObstacleToGrid(obstacles[i]);
-            new_box = this.addBox(obstacles[i], 0, 10, 2, "obstacle_" + i); //0: direction, 10:obstacle, z-index:2
+            new_box = this.addBox(obstacles[i], -1, 10, 2, "obstacle_" + i); //-1: direction(undefined), 10:obstacle, z-index:2
             this.obstacles.push(new_box);
         }
     }
@@ -352,14 +352,14 @@ function Board(w, h, styleclass, id) {
         // create food element and place it in an empty random position
         var new_box, pos = this.findRandomFreePosition();
         this.addFoodToGrid(pos);
-        new_box = this.addBox(pos, 0, 11, 5, "snake_food"); //0: direction, 11:food, z-index:5
+        new_box = this.addBox(pos, -1, 11, 5, "snake_food"); //-1: direction(undefined), 11:food, z-index:5
         this.food.push(new_box);
     }
     this.setPosToFood = function(pos) {
         // create food element and place it in a position pos
         var new_box;
         this.addFoodToGrid(pos);
-        new_box = this.addBox(pos, 0, 11, 5, "snake_food"); //0: direction, 11:food, z-index:5
+        new_box = this.addBox(pos, -1, 11, 5, "snake_food"); //-1: direction(undefined), 11:food, z-index:5
         this.food.push(new_box);
     }
     this.getSnakePosition = function(idx) {
@@ -474,6 +474,7 @@ function Board(w, h, styleclass, id) {
         }
         this.updateClass = function() {
             // class names according to this.image and this.dir
+            var separator = " ";
             switch (this.dir) {
                 case 0: //Up
                     this.dirclass = "snake-direction-up";
@@ -488,7 +489,8 @@ function Board(w, h, styleclass, id) {
                     this.dirclass = "snake-direction-right";
                     break;
                 default:
-                    this.dirclass = "snake-direction-up";
+                    this.dirclass = "";
+                    separator = "";
             }
             switch (this.image) {
                 case 0: //Head
@@ -539,7 +541,7 @@ function Board(w, h, styleclass, id) {
                 default: //Error
                     this.imageclass = "snake-snakebody-error";
             }
-            this.element.className = "snake-box " + this.imageclass + " " + this.dirclass;
+            this.element.className = "snake-box " + this.imageclass + separator + this.dirclass;
         }
         this.updatePosition = function() {
             // update px_pos and the box position according to this.pos
