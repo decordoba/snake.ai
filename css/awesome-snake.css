@@ -1,5 +1,5 @@
 /*
-Snake II Theme
+Snake EX2 Theme
 By Daniel de Cordoba Gil
 */
 
@@ -14,6 +14,27 @@ By Daniel de Cordoba Gil
 
 .board-original {
     background-color: rgba(238, 221, 187, 1);
+}
+
+/* Default images for all boxes whose variable is not specified by a theme*/
+:root{
+    --snake-head:        url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-body:        url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-turn-l:      url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-turn-r:      url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-tail:        url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-body-fat:    url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-turn-l-fat:  url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-turn-r-fat:  url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-tail-fat:    url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-mouth:       url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-head-tongue: url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-head-dead:   url('http://localhost/snakeII/css/images/missing_image2.png');
+    --snake-food:        url('http://localhost/snakeII/css/images/missing_image2.png');
+    --snake-tongue-body: url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-tongue-tip:  url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-obstacle:    url('http://localhost/snakeII/css/images/missing_image1.png');
+    --snake-error:       url('http://localhost/snakeII/css/images/missing_image1.png');
 }
 
 /* Boxes in the board */
@@ -33,8 +54,61 @@ By Daniel de Cordoba Gil
     background-image: url('./images/snakeblock.png');
 }
 
+/* Images for different boxes (variables depend on the chosen theme) */
+.snake-snakebody-head {
+    background-image: var(--snake-head);
+}
+.snake-snakebody-vertical {
+    background-image: var(--snake-body);
+}
+.snake-snakebody-turn-l {
+    background-image: var(--snake-turn-l);
+}
+.snake-snakebody-turn-r {
+    background-image: var(--snake-turn-r);
+}
+.snake-snakebody-tail {
+    background-image: var(--snake-tail);
+}
+.snake-snakebody-vertical-fat {
+    background-image: var(--snake-body-fat);
+}
+.snake-snakebody-turn-l-fat {
+    background-image: var(--snake-turn-l-fat);
+}
+.snake-snakebody-turn-r-fat {
+    background-image: var(--snake-turn-r-fat);
+}
+.snake-snakebody-tail-fat {
+    background-image: var(--snake-tail);
+}
+.snake-snakebody-open-mouth {
+    background-image: var(--snake-mouth);
+}
+.snake-snakebody-head-tongue {
+    background-image: var(--snake-head-tongue);
+}
+.snake-snakebody-dead {
+   background-image: var(--snake-head-dead);
+}
+.snake-food-block {
+    background-image: var(--snake-food);
+}
+.snake-snakebody-tongue-body {
+    background-image: var(--snake-tongue-body);
+}
+.snake-snakebody-tongue-tip {
+    background-image: var(--snake-tongue-tip);
+}
+.test .snake-snakebody-obstacle1 {
+    background-image: var(--snake-obstacle);
+}
+.test .snake-snakebody-error {
+    background-image: var(--snake-error);
+}
+
 /* Obstacles */
-.snake-snakebody-obstacle1{
+/*.snake-snakebody-obstacle1{
     background-image: url('./images/obstacles/yellow.png');
 }
 .snake-snakebody-obstacle2{
@@ -45,20 +119,20 @@ By Daniel de Cordoba Gil
 }
 .snake-snakebody-obstacle4{
     background-image: url('./images/obstacles/blue.png');
-}
+}*/
 
 /* Tongue boxes */
-.snake-snakebody-tongue-body {
+/*.snake-snakebody-tongue-body {
     background-image: url('./images/tongue/tongue_body.png');
 }
 .snake-snakebody-tongue-tip {
     background-image: url('./images/tongue/tongue_tip.png');
-}
+}*/
 
 /* Error box */
-.snake-snakebody-error{
+/*.snake-snakebody-error{
     background-image: url('./images/deadblock.png');
-}
+}*/
 
 /* Directions (used to turn images) */
 .snake-direction-left {
@@ -90,7 +164,7 @@ By Daniel de Cordoba Gil
     transform: rotate(180deg);
 }
 
-/* debug console */
+/* Debug console */
 .div-debug{
     font-family:Monospace;
 }
