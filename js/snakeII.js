@@ -32,6 +32,10 @@ function Board(w, h, styleclass, id) {
         var i;
         this.resetGrid();
         this.side = this.getBoxSide(0); //head
+        if (this.side % 4 !== 0) {
+            console.log("The theme used may show display problems, as it is using boxes with side:", this.side, "px.");
+            console.log("It is recommended to use images with a side that is multiple of 4, like 16, 20 or 24 px.");
+        }
         this.createBoard();
         this.loadImages();
         this.addObstacles(obstacles);
@@ -252,6 +256,11 @@ function Board(w, h, styleclass, id) {
         }
         this.snake[new_head_idx].setToHead(direction, use_tongue);
         this.snake[new_head_idx].setPosition(head_pos);
+        if (death) {
+            this.snake[new_head_idx].incrementZIndex(); //make sure head is seen over anything it collides with
+        } else {
+            this.snake[new_head_idx].checkAndDecrementZIndex(); //decrement z-index of box if it had been incremented
+        }
         if (eaten || eaten_tongue > 0) {
             this.snake[new_head_idx].makeFat();
         }
@@ -453,6 +462,7 @@ function Board(w, h, styleclass, id) {
         this.px_pos = new Position(pos.x * side, pos.y * side); //px position
         this.side = side;               //px, width/height of every box
         this.z_index = z_index;         //z-index property, sets what is shown in front of what
+        this.z_increment = 0;           //saves how many points has the z-index been incremented
         this.image = image;             //0:head, 1:body, 2:turnL, 3:turnR, 4:tail...
         this.imageclass = "";           //class for box image
         this.dir = dir;                 //0:up, 1:left, 2:down, 3:right
@@ -549,6 +559,16 @@ function Board(w, h, styleclass, id) {
             this.px_pos.y = pos.y * side;
             this.element.style.left = this.px_pos.x + "px";
             this.element.style.top = this.px_pos.y + "px";
+        }
+        this.incrementZIndex = function() {
+            this.z_increment++;
+            this.element.style.zIndex = this.z_index + this.z_increment;
+        }
+        this.checkAndDecrementZIndex = function() {
+            if (this.z_increment > 0) {
+                this.z_increment = 0;
+                this.element.style.zIndex = this.z_index;
+            }
         }
         this.makeFat = function(fat) {
             // makes snake segment fat (or unfat if set to false)
