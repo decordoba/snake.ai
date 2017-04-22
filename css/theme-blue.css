@@ -1,40 +1,19 @@
-.blue .snake-snakebody-head {
-    background-image: url('./images/blue/20_head_down.png');
-}
-.blue .snake-snakebody-vertical {
-    background-image: url('./images/blue/20_vertical.png');
-}
-.blue .snake-snakebody-turn-l {
-    background-image: url('./images/blue/20_turn_up_left.png');
-}
-.blue .snake-snakebody-turn-r {
-    background-image: url('./images/blue/20_turn_up_right.png');
-}
-.blue .snake-snakebody-tail {
-    background-image: url('./images/blue/20_tail_up.png');
-}
-.blue .snake-snakebody-vertical-fat {
-    background-image: url('./images/blue/20_vertical_fat.png');
-}
-.blue .snake-snakebody-turn-l-fat {
-    background-image: url('./images/blue/20_turn_up_left_fat.png');
-}
-.blue .snake-snakebody-turn-r-fat {
-    background-image: url('./images/blue/20_turn_up_right_fat.png');
-}
-.blue .snake-snakebody-tail-fat {
-    background-image: url('./images/blue/20_tail_up_fat.png');
-}
-.blue .snake-snakebody-open-mouth {
-}
-.blue .snake-snakebody-head-tongue {
-    background-image: url('./images/blue/20_head_down_tongue.png');
-}
-
-.blue .snake-snakebody-dead {
-   background-image: url('./images/red/20_head_down.png');
-}
-
-.blue .snake-food-block {
-    background-image: url('./images/food/red.png');    
+.blue {
+    --snake-head:        url('http://localhost/snakeII/css/images/blue/head_down.png');
+    --snake-body:        url('http://localhost/snakeII/css/images/blue/vertical.png');
+    --snake-turn-l:      url('http://localhost/snakeII/css/images/blue/turn_up_left.png');
+    --snake-turn-r:      url('http://localhost/snakeII/css/images/blue/turn_up_right.png');
+    --snake-tail:        url('http://localhost/snakeII/css/images/blue/tail_up.png');
+    --snake-body-fat:    url('http://localhost/snakeII/css/images/blue/vertical_fat.png');
+    --snake-turn-l-fat:  url('http://localhost/snakeII/css/images/blue/turn_up_left_fat.png');
+    --snake-turn-r-fat:  url('http://localhost/snakeII/css/images/blue/turn_up_right_fat.png');
+    --snake-tail-fat:    url('http://localhost/snakeII/css/images/blue/tail_up_fat.png');
+    --snake-mouth:       url('http://localhost/snakeII/css/images/blue/mouth_down.png');
+    --snake-head-tongue: url('http://localhost/snakeII/css/images/blue/head_down_tongue.png');
+    --snake-head-dead:   url('http://localhost/snakeII/css/images/blue/head_down_dead.png');
+    --snake-food:        url('http://localhost/snakeII/css/images/blue/food.png');
+    --snake-tongue-body: url('http://localhost/snakeII/css/images/blue/tongue_body.png');
+    --snake-tongue-tip:  url('http://localhost/snakeII/css/images/blue/tongue_tip.png');
+    --snake-obstacle:    url('http://localhost/snakeII/css/images/blue/obstacle.png');
+    --snake-error:       url('http://localhost/snakeII/css/images/blue/error.png');
 }
