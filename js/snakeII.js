@@ -26,6 +26,7 @@ function Board(w, h, styleclass, id) {
     this.element;                   //div element used as the board
     this.stacked_positions = {};    //when snake grows, cell position with more than one snake segment
     this.stacked_number = 0;        //number of stacked segments in stacked_positions
+    this.max_z_increment = 0;       //monitorizes max z-index for boxes, so head is always on top
     
     this.initBoard = function(obstacles, num_food) {
         // initialize board with obstacles and snake
@@ -214,7 +215,7 @@ function Board(w, h, styleclass, id) {
     }
     this.moveSnake = function(old_head_idx, new_head_idx, direction, use_tongue, growth) {
         // move snake towards direction, save new head in old tail and move its position, so it seems that snake moves
-        var eaten, death, i, tongue_pos, eaten_tongue = 0,
+        var eaten, death, i, tongue_pos, eaten_tongue = 0, prev_z_incr,
             new_tail_idx = (new_head_idx - 1 + this.snake.length) % this.snake.length,
             head_pos = this.getNewHeadPosition(this.snake[old_head_idx].pos, direction),
             old_tail = this.snake[new_head_idx];
@@ -257,9 +258,13 @@ function Board(w, h, styleclass, id) {
         this.snake[new_head_idx].setToHead(direction, use_tongue);
         this.snake[new_head_idx].setPosition(head_pos);
         if (death) {
-            this.snake[new_head_idx].incrementZIndex(); //make sure head is seen over anything it collides with
+            this.max_z_increment += 1;
+            this.snake[new_head_idx].setZIncrement(this.max_z_increment); //make sure head is seen over anything it collides with
         } else {
-            this.snake[new_head_idx].checkAndDecrementZIndex(); //decrement z-index of box if it had been incremented
+            prev_z_incr = this.snake[new_head_idx].resetZIncrement(); //set z-index of box  to its original value
+            if (prev_z_incr === this.max_z_increment) {
+                this.max_z_increment = 0; //If all boxes have been reset, set max_z_increment to 0
+            }
         }
         if (eaten || eaten_tongue > 0) {
             this.snake[new_head_idx].makeFat();
@@ -560,15 +565,17 @@ function Board(w, h, styleclass, id) {
             this.element.style.left = this.px_pos.x + "px";
             this.element.style.top = this.px_pos.y + "px";
         }
-        this.incrementZIndex = function() {
-            this.z_increment++;
+        this.setZIncrement = function(incr) {
+            this.z_increment = incr;
             this.element.style.zIndex = this.z_index + this.z_increment;
         }
-        this.checkAndDecrementZIndex = function() {
-            if (this.z_increment > 0) {
+        this.resetZIncrement = function() {
+            var prev_incr = this.z_increment;
+            if (this.z_increment !== 0) {
                 this.z_increment = 0;
                 this.element.style.zIndex = this.z_index;
             }
+            return prev_incr;
         }
         this.makeFat = function(fat) {
             // makes snake segment fat (or unfat if set to false)
