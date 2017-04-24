@@ -5,6 +5,8 @@ http://github.com/decordoba
 My goal: something in the lines of https://www.youtube.com/watch?v=EBYIJ1GPvG8
 */
 
+"use strict";
+
 // define position constructor
 function Position(x, y) {
     this.x = x;
@@ -224,7 +226,7 @@ function Board(w, h, styleclass, id) {
             this.snake[old_head_idx].setToBody(direction);
         }
         if (use_tongue) {
-            tongue_pos = this.useTongue(head_pos, direction);
+            tongue_pos = this.useTongue(head_pos, direction, this.max_z_increment);
             for (i=0; i<tongue_pos.length; i++) {
                 if (this.getGridValue(tongue_pos[i]) < 0) { //food
                     eaten_tongue += 1;
@@ -335,11 +337,12 @@ function Board(w, h, styleclass, id) {
         }
         return new_pos;
     }
-    this.useTongue = function(pos, dir) {
+    this.useTongue = function(pos, dir, z_incr) {
         // use the tongue (show it and eat food in front of pos)
         var i, prev_pos = pos, all_pos = [];
         for (i=0; i<this.tongue.length; i++) {
             prev_pos = this.getNewHeadPosition(prev_pos, dir);
+            this.tongue[i].setZIncrement(z_incr);
             this.tongue[i].setDirToValue(dir);
             this.tongue[i].setPosition(prev_pos);
             all_pos.push(prev_pos);
@@ -350,6 +353,7 @@ function Board(w, h, styleclass, id) {
         // hide the tongue
         var i, hidden_pos = new Position(-10000, -10000);
         for (i=0; i<this.tongue.length; i++) {
+            this.tongue[i].resetZIncrement();
             this.tongue[i].setPosition(hidden_pos);
         }
     }
@@ -459,6 +463,13 @@ function Board(w, h, styleclass, id) {
             this.stacked_positions[key] = value + update;
         }
         this.stacked_number += update;
+    }
+
+    // define SmartBox constructor (box that moves, changes in every iteration and dies after timeout)
+    function SmartBox(pos, side, dir, images, z_index, id, ttl, movement) {
+        Box.call(this, pos, side, dir, images[0], z_index, id);
+        this.ttl = ttl;
+        this.movement = movement;
     }
 
     // define cell constructor
@@ -870,11 +881,15 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
+    3. Make sure tongue is always on top
+    4. Make constants (DIR, IMAGE, Z-INDEX...) depend on constants, instead of hard-coded values
+    5. Make box with snake only functions inherit from box (fat, makeHead, etc.)
     6. Make nice looking snake
     7. Implement moving food
   7.5. Handle case where there is no room for new food
-  7.6. Head should always be on top (increase z-index)
-  7.7 Change color when dying
+  7.6. Change head so that it opens mouth when about to eat sth (attention tongue)
+  7.7. Change color when dying
+  7.8. Make sure tongue works fine even when dying and showing tongue, mouth open and tongue, etc
     6. Handle case in which one of the positions where the snake can go is where its tail is. From grid its seems that it is not allowed but in next movement it would be because tail would not be there anymore (carefull, stacked!)
     9. Implement and test multiplayer game
    10. Create crazy game modes: sth that when you eat you put obstacle in opponent map, sth that when you eat a food you start growing from your tail and never stop,
