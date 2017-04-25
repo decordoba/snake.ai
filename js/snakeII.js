@@ -30,32 +30,49 @@ function Board(w, h, styleclass, id) {
     this.stacked_number = 0;        //number of stacked segments in stacked_positions
     this.max_z_increment = 0;       //monitorizes max z-index for boxes, so head is always on top
     
+    // initialize constants
+    const UP = 0,            LEFT = 1,
+          DOWN = 2,          RIGHT = 3,
+          NO_DIR = -1,
+
+          HEAD = 0,          BODY = 1,
+          TURN_L = 2,        TURN_R = 3,
+          TAIL = 4,          MOUTH = 5,
+          BODY_FAT = 6,      TURN_L_FAT = 7,
+          TURN_R_FAT = 8,    TAIL_FAT = 9,
+          FOOD = 10,         TMP_FOOD = 11,
+          HEAD_TONGUE = 12,  TONGUE_BODY = 13,
+          TONGUE_TIP = 14,   OBSTACLE = 15,
+
+          Z_SNAKE = 10,      Z_TONGUE = 15,
+          Z_OBSTACLE = 2,    Z_FOOD = 5;
+
     this.initBoard = function(obstacles, num_food) {
         // initialize board with obstacles and snake
         var i;
         this.resetGrid();
-        this.side = this.getBoxSide(0); //head
+        this.side = this.getBoxSide(HEAD); //head
         if (this.side % 4 !== 0) {
-            console.log("The theme used may show display problems, as it is using boxes with side:", this.side, "px.");
-            console.log("It is recommended to use images with a side that is multiple of 4, like 16, 20 or 24 px.");
+            console.log("The theme used may not be displayed perfectly, as it is using boxes with side:", this.side, "px.");
+            console.log("It is recommended to use images with a side that is a multiple of 4, like 16, 20 or 24 px.");
         }
         this.createBoard();
         this.loadImages();
         this.addObstacles(obstacles);
         this.initSnake();
         this.initTongue();
-        // this.setPosToFood(new Position(8, 2));
-        // this.setPosToFood(new Position(9, 2));
+        // this.setPosToFood(new Position(8, 2), 0);
+        // this.setPosToFood(new Position(9, 2), 1);
         if (num_food == undefined || num_food < 2) {
             this.addRandomFood();
         } else {
             for (i=0; i<num_food; i++) {
-                this.addRandomFood();
+                this.addRandomFood(i);
             }
         }
     }
     this.resetGrid = function() {
-        // set grid to all zeros
+        // create grid and set it to all zeros
         var row, col;
         this.grid = [];
         for (col=0; col<this.w; col++) {
@@ -82,7 +99,9 @@ function Board(w, h, styleclass, id) {
         var new_box, i;
         for (i=0; i<obstacles.length; i++) {
             this.addObstacleToGrid(obstacles[i]);
-            new_box = this.addBox(obstacles[i], -1, 10, 2, "obstacle_" + i); //-1: direction(undefined), 10:obstacle, z-index:2
+        }
+        for (i=0; i<obstacles.length; i++) {
+            new_box = this.addBox(obstacles[i], NO_DIR, OBSTACLE, Z_OBSTACLE, "obstacle_" + i);
             this.obstacles.push(new_box);
         }
     }
@@ -94,7 +113,7 @@ function Board(w, h, styleclass, id) {
             i, new_box;
         for (i=0; i<positions.length; i++) {
             this.addSnakeBoxToGrid(positions[i]);
-            new_box = this.addBox(positions[i], directions[i], snake_parts[i], 10, "snake_cell_" + i); //z-index:10
+            new_box = this.addBox(positions[i], directions[i], snake_parts[i], Z_SNAKE, "snake_cell_" + i);
             this.snake.push(new_box);
         }
     }
@@ -105,7 +124,7 @@ function Board(w, h, styleclass, id) {
             snake_parts = [13, 14], //13:tongue_body, 14:tongue_tip
             i, new_box;
         for (i=0; i<positions.length; i++) {
-            new_box = this.addBox(positions[i], directions[i], snake_parts[i], 15, "snake_tongue_" + i); //z-index:15
+            new_box = this.addBox(positions[i], directions[i], snake_parts[i], Z_TONGUE, "snake_tongue_" + i);
             this.tongue.push(new_box);
         }
     }
@@ -120,13 +139,14 @@ function Board(w, h, styleclass, id) {
             container.className = this.class;
             container.id = "tmp_div";
             document.body.appendChild(container);
-            box = new Box(new Position(-10000, -10000), 0, 0, box_num, 0, "tmp_box"); //z-index:0
+            box = new Box(new Position(-10000, -10000), 0, NO_DIR, box_num, 0, "tmp_box"); //z-index:0
             box.createBox(container);
             image_src = document.defaultView.getComputedStyle(box.element, null).backgroundImage.replace(/url\((['"])?(.*?)\1\)/gi, '$2').split(',')[0];
             image = new Image();
             image.src = image_src;
             side = Math.max(image.width, image.height) || 20;
             container.remove();
+            console.log("Box side:", side, "px");
         } else {
             // In IE, the size will be 20 always (anyway, I don't expect many players to use IE)
             side = 20;
@@ -137,7 +157,7 @@ function Board(w, h, styleclass, id) {
         // use dummy box to load all images, so they are stored in cache
         var new_box, i, num_imgs = 16;
         for (i=0; i<num_imgs; i++) {
-            new_box = this.addBox(new Position(-10000, -10000), 0, i, 0, "dummy_box_" + i); //z-index:0
+            new_box = this.addBox(new Position(-10000, -10000), NO_DIR, i, 0, "dummy_box_" + i); //z-index:0
         }
         setTimeout(function(){
             for (i=0; i<num_imgs; i++) {
@@ -366,18 +386,21 @@ function Board(w, h, styleclass, id) {
         }
         return pos;
     }
-    this.addRandomFood = function() {
+    this.addRandomFood = function(idx) {
         // create food element and place it in an empty random position
         var new_box, pos = this.findRandomFreePosition();
         this.addFoodToGrid(pos);
-        new_box = this.addBox(pos, -1, 11, 5, "snake_food"); //-1: direction(undefined), 11:food, z-index:5
+        if (idx === undefined) {
+            idx = 0;
+        }
+        new_box = this.addBox(pos, NO_DIR, FOOD, Z_FOOD, "snake_food_" + idx);
         this.food.push(new_box);
     }
-    this.setPosToFood = function(pos) {
+    this.setPosToFood = function(pos, idx) {
         // create food element and place it in a position pos
         var new_box;
         this.addFoodToGrid(pos);
-        new_box = this.addBox(pos, -1, 11, 5, "snake_food"); //-1: direction(undefined), 11:food, z-index:5
+        new_box = this.addBox(pos, NO_DIR, FOOD, Z_FOOD, "snake_food_" + idx);
         this.food.push(new_box);
     }
     this.getSnakePosition = function(idx) {
@@ -502,16 +525,16 @@ function Board(w, h, styleclass, id) {
             // class names according to this.image and this.dir
             var separator = " ";
             switch (this.dir) {
-                case 0: //Up
+                case UP: //Up
                     this.dirclass = "snake-direction-up";
                     break;
-                case 1: //Left
+                case LEFT: //Left
                     this.dirclass = "snake-direction-left";
                     break;
-                case 2: //Down
+                case DOWN: //Down
                     this.dirclass = "snake-direction-down";
                     break;
-                case 3: //Right
+                case RIGHT: //Right
                     this.dirclass = "snake-direction-right";
                     break;
                 default:
@@ -519,49 +542,49 @@ function Board(w, h, styleclass, id) {
                     separator = "";
             }
             switch (this.image) {
-                case 0: //Head
+                case HEAD: //Head
                     this.imageclass = "snake-snakebody-head";
                     break;
-                case 1: //Body
+                case BODY: //Body
                     this.imageclass = "snake-snakebody-vertical";
                     break;
-                case 2: //Turn Left
+                case TURN_L: //Turn Left
                     this.imageclass = "snake-snakebody-turn-l";
                     break;
-                case 3: //Turn Right
+                case TURN_R: //Turn Right
                     this.imageclass = "snake-snakebody-turn-r";
                     break;
-                case 4: // Tail
+                case TAIL: // Tail
                     this.imageclass = "snake-snakebody-tail";
                     break;
-                case 5: // Snake Open Mouth
+                case MOUTH: // Snake Open Mouth
                     this.imageclass = "snake-snakebody-open-mouth";
                     break;
-                case 6: // Body Eaten
+                case BODY_FAT: // Body Eaten
                     this.imageclass = "snake-snakebody-vertical-fat";
                     break;
-                case 7: // Turn Left Eaten
+                case TURN_L_FAT: // Turn Left Eaten
                     this.imageclass = "snake-snakebody-turn-l-fat";
                     break;
-                case 8: // Turn Right Eaten
+                case TURN_R_FAT: // Turn Right Eaten
                     this.imageclass = "snake-snakebody-turn-r-fat";
                     break;
-                case 9: // Tail Eaten
+                case TAIL_FAT: // Tail Eaten
                     this.imageclass = "snake-snakebody-tail-fat";
                     break;
-                case 10: // Obstacle
+                case OBSTACLE: // Obstacle
                     this.imageclass = "snake-snakebody-obstacle1";
                     break;
-                case 11: // Food
+                case FOOD: // Food
                     this.imageclass = "snake-food-block";
                     break;
-                case 12: // Head Tongue
+                case HEAD_TONGUE: // Head Tongue
                     this.imageclass = "snake-snakebody-head-tongue";
                     break;
-                case 13: // Tongue Middle
+                case TONGUE_BODY: // Tongue Middle
                     this.imageclass = "snake-snakebody-tongue-body";
                     break;
-                case 14: // Tongue Tip
+                case TONGUE_TIP: // Tongue Tip
                     this.imageclass = "snake-snakebody-tongue-tip";
                     break;
                 default: //Error
@@ -614,11 +637,11 @@ function Board(w, h, styleclass, id) {
         this.setToHead = function(dir, tongue, open_mouth) {
             // set box style to head
             this.dir = dir;
-            this.image = 0; //head
+            this.image = HEAD; //head
             if (tongue === true) {
-                this.image = 12; //head with tongue
+                this.image = HEAD_TONGUE; //head with tongue
             } else if (open_mouth === true) {
-                this.image = 5; //head with open mouth
+                this.image = MOUTH; //head with open mouth
             }
             this.fat = false; //make sure a new head is not fat unless purposely set later
             this.updateClass();
@@ -626,31 +649,42 @@ function Board(w, h, styleclass, id) {
         this.setToBody = function(head_dir) {
             // set box to "neck" or 1st body segment after head. uses head_dir to calculate turns
             var diff = 0;
-            if (head_dir == this.dir) {
-                this.image = 1; //body straight
-            } else {
-                diff = head_dir - this.dir;
-                if (diff === 1 || diff === -3) {
-                    this.image = 3; //turn left
-                } else {
-                    this.image = 2; //turn right
-                }
-            }
             if (this.fat) {
-                this.image += 5;
+                if (head_dir == this.dir) {
+                    this.image = BODY_FAT; //body straight eaten fat after eating
+                } else {
+                    diff = head_dir - this.dir;
+                    if (diff === 1 || diff === -3) {
+                        this.image = TURN_R_FAT; //turn right fat after eating
+                    } else {
+                        this.image = TURN_L_FAT; //turn left fat after eating
+                    }
+                }
+            } else {
+                if (head_dir == this.dir) {
+                    this.image = BODY; //body straight
+                } else {
+                    diff = head_dir - this.dir;
+                    if (diff === 1 || diff === -3) {
+                        this.image = TURN_R; //turn right
+                    } else {
+                        this.image = TURN_L; //turn left
+                    }
+                }
             }
             this.updateClass();
         }
         this.setToTail = function() {
             // set box to tail and correct tail direction after a turn
-            if (this.image == 2 || this.image == 2 + 5) { //2nd condition considers fat
+            if (this.image === TURN_L || this.image === TURN_L_FAT) {
                 this.dir = (this.dir + 3) % 4;
-            } else if (this.image == 3 || this.image == 3 + 5) { //2nd condition considers fat
+            } else if (this.image == TURN_R || this.image == TURN_R_FAT) {
                 this.dir = (this.dir + 1) % 4;
             }
-            this.image = 4; //tail
             if (this.fat) {
-                this.image += 5;
+                this.image = TAIL_FAT; //tail fat after eating
+            } else{
+                this.image = TAIL; //tail
             }
             this.updateClass();
         }
@@ -671,7 +705,7 @@ function Board(w, h, styleclass, id) {
 }
 
 function Snake(board, keys, speed, AI, growth, numFood) {
-    this.board = board;
+    this.board = board; //holds the game board
     this.head = 0; //index for head in board.snake
     this.tail = 0; //index for tail in board.snake
     this.direction = 0; //0:up, 1:left, 2:down, 3:right
@@ -825,22 +859,10 @@ function Snake(board, keys, speed, AI, growth, numFood) {
                 }
             }
         }
-        // console.log("SNAKE BEFORE", this.head, this.tail);
-        // for (i=0; i<this.board.snake.length; i++) {
-            // var aaa = ""; if(i==this.head){aaa="HEAD";}else if(i==this.tail){aaa="TAIL";}
-            // console.log(JSON.stringify(this.board.snake[i].id), aaa);
-        // }
         tmp = this.board.moveSnake(this.head, this.tail, this.direction, use_tongue, this.growth);
         this.head = tmp.head;
         this.tail = tmp.tail;
         this.useTongueUpdate();
-        // console.log("SNAKE AFTER", this.head, this.tail);
-        // for (i=0; i<this.board.snake.length; i++) {
-            // aaa = ""; if(i==this.head){aaa="HEAD";}else if(i==this.tail){aaa="TAIL";}
-            // console.log(JSON.stringify(this.board.snake[i].id), aaa);
-        // }
-        // console.log("-------------------------------------------------");
-
         if (this.showDebug) {
             if (this.debugElement === undefined) {
                 this.debugElement = document.createElement("div");
@@ -881,7 +903,7 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
-    3. Make sure tongue is always on top
+    3. Add obstacles with shapes (so they look like walls)
     4. Make constants (DIR, IMAGE, Z-INDEX...) depend on constants, instead of hard-coded values
     5. Make box with snake only functions inherit from box (fat, makeHead, etc.)
     6. Make nice looking snake
