@@ -6,31 +6,39 @@
   --> 
 
   <title>Snake II</title>
-  <link rel=stylesheet id=style type=text/css href=./css/awesome-snake.css />
   <link rel=stylesheet id=style type=text/css href=./css/theme-red.css />
   <link rel=stylesheet id=style type=text/css href=./css/theme-blue.css />
   <link rel=stylesheet id=style type=text/css href=./css/theme-yellow.css />
   <link rel=stylesheet id=style type=text/css href=./css/theme-green.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-yellowblue.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-directional.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-original.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-original18.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-original24.css />
+  <link rel=stylesheet id=style type=text/css href=./css/theme-test.css />
+  <link rel=stylesheet id=style type=text/css href=./css/awesome-snake.css />
 
 </head>
 <body>
-  <div id="SnakeII" tabindex="0"></div>
-  <!-- <div id="SnakeIII" tabindex="0"></div> -->
+  <div id="SnakeEX2" tabindex="0"></div>
   
   <script type="text/javascript" src="./js/snakeII.js"></script>
 
   <script type="text/javascript">
     var w = 15,
         h = 15,
-        classname = "snake-board blue", // black background, blue snake. Available colors: blue, red, green, yellow
-        id = "SnakeII",
+        classname = "snake-board board-original original24", // black background, blue snake. Available colors: blue, red, green, yellow
+        id = "SnakeEX2",
         keys = [87, 65, 83, 68, 32, 80], //WASD-Space-P (the Space is for the tongue) (the P is for Pause)
-        speed = 300,
+        speed = 200,
         growth = 1,
         AI = true,
         board = new Board(w, h, classname, id),
         game = new Snake(board, keys, speed, AI, growth);
     game.initGame([]);
+    //game.initGame([{x: 4, y:4}, {x: 10, y:4}, //eyes
+    //               {x: 4, y:9}, {x: 5, y:10}, {x: 6, y:11}, {x: 7, y:11}, {x: 8, y:11}, {x: 9, y:10}, {x: 10, y:9}, //mouth
+    //               {x: 7, y:7}]);
 
     /*
     var classname2 = "snake-board green", // black background, blue snake
