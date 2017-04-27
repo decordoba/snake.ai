@@ -15,5 +15,11 @@
     --snake-tongue-body: url('http://localhost/snakeII/css/images/blue/tongue_body.png');
     --snake-tongue-tip:  url('http://localhost/snakeII/css/images/blue/tongue_tip.png');
     --snake-obstacle:    url('http://localhost/snakeII/css/images/blue/obstacle.png');
+    --snake-obstacle0:   url('http://localhost/snakeII/css/images/blue/obstacle0.png');
+    --snake-obstacle1:   url('http://localhost/snakeII/css/images/blue/obstacle1.png');
+    --snake-obstacle2a:  url('http://localhost/snakeII/css/images/blue/obstacle2a.png');
+    --snake-obstacle2b:  url('http://localhost/snakeII/css/images/blue/obstacle2b.png');
+    --snake-obstacle3:   url('http://localhost/snakeII/css/images/blue/obstacle3.png');
+    --snake-obstacle4:   url('http://localhost/snakeII/css/images/blue/obstacle4.png');
     --snake-error:       url('http://localhost/snakeII/css/images/blue/error.png');
 }

@@ -100,10 +100,25 @@ By Daniel de Cordoba Gil
 .snake-snakebody-tongue-tip {
     background-image: var(--snake-tongue-tip);
 }
-.test .snake-snakebody-obstacle1 {
-    background-image: var(--snake-obstacle);
+.snake-snakebody-obstacle0 {
+    background-image: var(--snake-obstacle0);
 }
-.test .snake-snakebody-error {
+.snake-snakebody-obstacle1 {
+    background-image: var(--snake-obstacle1);
+}
+.snake-snakebody-obstacle2a {
+    background-image: var(--snake-obstacle2a);
+}
+.snake-snakebody-obstacle2b {
+    background-image: var(--snake-obstacle2b);
+}
+.snake-snakebody-obstacle3 {
+    background-image: var(--snake-obstacle3);
+}
+.snake-snakebody-obstacle4 {
+    background-image: var(--snake-obstacle4);
+}
+.snake-snakebody-error {
     background-image: var(--snake-error);
 }
 
