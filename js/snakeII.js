@@ -45,7 +45,10 @@ function Board(w, h, styleclass, id) {
           TONGUE_TIP = 14,   OBSTACLE = 15,
 
           Z_SNAKE = 10,      Z_TONGUE = 15,
-          Z_OBSTACLE = 2,    Z_FOOD = 5;
+          Z_OBSTACLE = 2,    Z_FOOD = 5,
+
+          GRID_OBSTACLE = 1, GRID_SNAKE = 2, //things that kill the snake when eaten must be greater than 0
+          GRID_EMPTY = 0,    GRID_FOOD = -1; //food (things that make the snake grow) must be smaller than 0
 
     this.initBoard = function(obstacles, num_food) {
         // initialize board with obstacles and snake
@@ -184,19 +187,19 @@ function Board(w, h, styleclass, id) {
     }
     this.addSnakeBoxToGrid = function(pos) {
         // warning, does not check if pos is ok
-        this.grid[pos.x][pos.y] = 2;
+        this.grid[pos.x][pos.y] = GRID_SNAKE;
     }
     this.addObstacleToGrid = function(pos) {
         // warning, does not check if pos is ok
-        this.grid[pos.x][pos.y] = 1;
+        this.grid[pos.x][pos.y] = GRID_OBSTACLE;
     }
     this.addFoodToGrid = function(pos) {
         // warning, does not check if pos is ok
-        this.grid[pos.x][pos.y] = -1;
+        this.grid[pos.x][pos.y] = GRID_FOOD;
     }
     this.removeBoxFromGrid = function(pos) {
         // warning, does not check if pos is ok
-        this.grid[pos.x][pos.y] = 0;
+        this.grid[pos.x][pos.y] = GRID_EMPTY;
     }
     this.addBox = function(pos, dir, element, z_index, id) {
         // creates box, gives style to it (so it is shown), and returns it
@@ -378,9 +381,9 @@ function Board(w, h, styleclass, id) {
         }
     }
     this.findRandomFreePosition = function() {
-        // find position in grid that is empty (0). Warning, keeps searching forever
+        // find position in grid that is empty. Warning, keeps searching forever
         var pos = new Position(Math.floor(Math.random() * this.w), Math.floor(Math.random() * this.h));
-        while (this.getGridValue(pos) !== 0) {
+        while (this.getGridValue(pos) !== GRID_EMPTY) {
             pos.x = Math.floor(Math.random() * this.w);
             pos.y = Math.floor(Math.random() * this.h);
         }
@@ -557,9 +560,6 @@ function Board(w, h, styleclass, id) {
                 case TAIL: // Tail
                     this.imageclass = "snake-snakebody-tail";
                     break;
-                case MOUTH: // Snake Open Mouth
-                    this.imageclass = "snake-snakebody-open-mouth";
-                    break;
                 case BODY_FAT: // Body Eaten
                     this.imageclass = "snake-snakebody-vertical-fat";
                     break;
@@ -572,11 +572,8 @@ function Board(w, h, styleclass, id) {
                 case TAIL_FAT: // Tail Eaten
                     this.imageclass = "snake-snakebody-tail-fat";
                     break;
-                case OBSTACLE: // Obstacle
-                    this.imageclass = "snake-snakebody-obstacle1";
-                    break;
-                case FOOD: // Food
-                    this.imageclass = "snake-food-block";
+                case MOUTH: // Snake Open Mouth
+                    this.imageclass = "snake-snakebody-open-mouth";
                     break;
                 case HEAD_TONGUE: // Head Tongue
                     this.imageclass = "snake-snakebody-head-tongue";
@@ -586,6 +583,12 @@ function Board(w, h, styleclass, id) {
                     break;
                 case TONGUE_TIP: // Tongue Tip
                     this.imageclass = "snake-snakebody-tongue-tip";
+                    break;
+                case FOOD: // Food
+                    this.imageclass = "snake-food-block";
+                    break;
+                case OBSTACLE: // Obstacle
+                    this.imageclass = "snake-snakebody-obstacle1";
                     break;
                 default: //Error
                     this.imageclass = "snake-snakebody-error";
@@ -873,9 +876,9 @@ function Snake(board, keys, speed, AI, growth, numFood) {
             tmp = "";
             for (var i=0; i<this.board.h; i++) {
                 for (var j=0; j<this.board.w; j++) {
-                    if (this.board.grid[j][i] == 0) { //free space
+                    if (this.board.grid[j][i] == GRID_EMPTY) { //free space
                         tmp += "..";
-                    } else if (this.board.grid[j][i] == 2) { //snake
+                    } else if (this.board.grid[j][i] == GRID_SNAKE) { //snake
                         tmp += "@ ";
                     } else if (this.board.grid[j][i] < 0) { //food
                         tmp += "X ";
