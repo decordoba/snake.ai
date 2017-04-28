@@ -112,7 +112,7 @@ function Board(w, h, styleclass, id) {
                 this.addRandomFood(i);
             }
         }
-        this.addRandomTemporaryFood(0, 10, new Position(1, 0));
+        this.addRandomTemporaryFood(100, new Position(1, 0), 0);
     }
     this.resetGrid = function() {
         // create grid and set it to all zeros
@@ -357,18 +357,18 @@ function Board(w, h, styleclass, id) {
     }
     this.addSmartBox = function(pos, dir, img, z_index, ttl, movement, id) {
         // creates smart box, gives style to it (so it is shown), and returns it
-        var box = new SmartBox(pos, this.side, dir, img, z_index, ttl, movement, id);
+        var box = new SmartBox(pos, this.side, dir, img, z_index, ttl, movement, this.w, this.h, id);
         box.createBox(this.element);
         return box;
     }
     this.updateTemporaryFood = function() {
         var i, idx_food;
         for (i=0; i<this.tmp_food.length; i++) {
+            this.removeFoodFromGrid(this.tmp_food[i].pos);
             if (this.tmp_food[i].advancePosition()) {
                 idx_food = this.tmp_food[i].pos.findObjectIndex(this.food);
                 this.removeTemporaryFood(idx_food, i);
             } else {
-                this.removeFoodFromGrid(this.tmp_food[i].pos);
                 this.addTemporaryFoodToGrid(this.tmp_food[i].pos);
             }
         }
@@ -583,7 +583,7 @@ function Board(w, h, styleclass, id) {
         new_box = this.addBox(pos, NO_DIR, FOOD, Z_FOOD, "snake_food_" + idx);
         this.food.push(new_box);
     }
-    this.addRandomTemporaryFood = function(idx, ttl, movement) {
+    this.addRandomTemporaryFood = function(ttl, movement, idx) {
         // create temporary food element and place it in an empty random position
         var new_box, pos = this.findRandomFreePosition();
         this.addTemporaryFoodToGrid(pos);
@@ -680,17 +680,32 @@ function Board(w, h, styleclass, id) {
     }
 
     // define SmartBox constructor (box that moves, changes in every iteration and dies after timeout)
-    function SmartBox(pos, side, dir, images, z_index, ttl, movement, id) {
+    function SmartBox(pos, side, dir, images, z_index, ttl, movement, w, h, id) {
         Box.call(this, pos, side, dir, images[0] || images, z_index, id);
         this.ttl = ttl;
         this.movement = movement;
+        this.max_pos = new Position(w - 1, h - 1);
+        this.min_pos = new Position(0, 0);
 
         this.advancePosition = function() {
             this.pos.x += this.movement.x;
             this.pos.y += this.movement.y;
+            this.correctPosition();
             this.updatePosition();
             this.ttl -= 1;
             return this.ttl <= 0;
+        }
+        this.correctPosition = function() {
+            if (this.pos.x > this.max_pos.x) {
+                this.pos.x = this.min_pos.x;
+            } else if (this.pos.x < this.min_pos.x) {
+                this.pos.x = this.max_pos.x;
+            }
+            if (this.pos.y > this.max_pos.y) {
+                this.pos.y = this.min_pos.y;
+            } else if (this.pos.y < this.min_pos.y) {
+                this.pos.y = this.max_pos.y;
+            }
         }
     }
 
@@ -1130,6 +1145,7 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
+    1. Problem when temporary food goes over another food
     2. Fix problem board loads smaller or bigger sometimes
     3. Add obstacles with shapes (so they look like walls) --> modify so they are like original (lights and shades)
     5. Make box with snake only functions inherit from box (fat, makeHead, etc.)
