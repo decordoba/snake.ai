@@ -11,6 +11,40 @@ My goal: something in the lines of https://www.youtube.com/watch?v=EBYIJ1GPvG8
 function Position(x, y) {
     this.x = x;
     this.y = y;
+
+    this.add = function(pos) {
+        this.x += pos.x;
+        this.y += pos.y;
+    }
+    this.compare = function(pos) {
+        return this.x === pos.x && this.y === pos.y;
+    }
+    this.findIndex = function(pos_array) {
+        // return index of position in positions array, or -1 if not found
+        var i;
+        for (i=0; i<pos_array.length; i++) {
+            if (this.compare(pos_array[i])) {
+                break;
+            }
+        }
+        if (i >= pos_array.length) {
+            i = -1;
+        }
+        return i;
+    }
+    this.findObjectIndex = function(object_array) {
+        // return index of position in objects array (where every object has attribute pos), or -1 if not found
+        var i;
+        for (i=0; i<object_array.length; i++) {
+            if (this.compare(object_array[i].pos)) {
+                break;
+            }
+        }
+        if (i >= object_array.length) {
+            i = -1;
+        }
+        return i;
+    }
 }
 
 // define board constructor
