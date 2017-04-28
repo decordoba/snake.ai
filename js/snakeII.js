@@ -76,7 +76,10 @@ function Board(w, h, styleclass, id) {
           TURN_R_FAT = 8,    TAIL_FAT = 9,
           FOOD = 10,         TMP_FOOD = 11,
           HEAD_TONGUE = 12,  TONGUE_BODY = 13,
-          TONGUE_TIP = 14,   OBSTACLE = 15,
+          TONGUE_TIP = 14,   OBSTACLE0 = 15,
+          OBSTACLE1 = 16,    OBSTACLE2STRAIGHT = 17,
+          OBSTACLE3 = 18,    OBSTACLE2TURN = 19,
+          OBSTACLE4 = 20,    OBSTACLE = 21,
 
           Z_SNAKE = 10,      Z_TONGUE = 15,
           Z_OBSTACLE = 2,    Z_FOOD = 5,
@@ -133,12 +136,13 @@ function Board(w, h, styleclass, id) {
     }
     this.addObstacles = function(obstacles) {
         // add obstacles to grid and create (and show) obstacle elements
-        var new_box, i;
+        var new_box, i, obstacle_image, obstacle_dir;
         for (i=0; i<obstacles.length; i++) {
             this.addObstacleToGrid(obstacles[i]);
         }
         for (i=0; i<obstacles.length; i++) {
-            new_box = this.addBox(obstacles[i], NO_DIR, OBSTACLE, Z_OBSTACLE, "obstacle_" + i);
+            [obstacle_dir, obstacle_image] = this.getObstacleStyleFromGrid(obstacles[i]);
+            new_box = this.addBox(obstacles[i], obstacle_dir, obstacle_image, Z_OBSTACLE, "obstacle_" + i);
             this.obstacles.push(new_box);
         }
     }
@@ -192,7 +196,7 @@ function Board(w, h, styleclass, id) {
     }
     this.loadImages = function() {
         // use dummy box to load all images, so they are stored in cache
-        var new_box, i, num_imgs = 16;
+        var new_box, i, num_imgs = 30;
         for (i=0; i<num_imgs; i++) {
             new_box = this.addBox(new Position(-10000, -10000), NO_DIR, i, 0, "dummy_box_" + i); //z-index:0
         }
@@ -215,9 +219,106 @@ function Board(w, h, styleclass, id) {
             }
         }
     }
+    this.getObstacleStyleFromGrid = function(pos) {
+        var x = pos.x, y = pos.y, neighbors = 0, num_neighbors = 0, i, dir, img,
+            neighbor_coords = [new Position(-1, 0), new Position(1, 0),
+                               new Position(0, -1), new Position(0, 1)];
+        for (i=0; i<neighbor_coords.length; i++) {
+            neighbor_coords[i].add(pos);
+            if (this.grid[neighbor_coords[i].x][neighbor_coords[i].y] === GRID_OBSTACLE) {
+                neighbors += 2**i;
+                num_neighbors += 1;
+            }
+        }
+        switch(num_neighbors) {
+            case 0:
+                dir = NO_DIR;
+                img = OBSTACLE0;
+                break;
+            case 1:
+                img = OBSTACLE1;
+                switch(neighbors) {
+                    case 1:
+                        dir = LEFT;
+                        break;
+                    case 2:
+                        dir = RIGHT;
+                        break;
+                    case 4:
+                        dir = UP;
+                        break;
+                    case 8:
+                        dir = DOWN;
+                        break;
+                }
+                break;
+            case 2:
+                switch(neighbors) {
+                    case 3:
+                    case 12:
+                        img = OBSTACLE2STRAIGHT;
+                        dir = UP;
+                        break;
+                    default:
+                        img = OBSTACLE2TURN;
+                }
+                switch(neighbors) {
+                    case 3:
+                        dir = LEFT;
+                        break;
+                    case 5:
+                        dir = UP;
+                        break;
+                    case 6:
+                        dir = RIGHT;
+                        break;
+                    case 9:
+                        dir = LEFT;
+                        break;
+                    case 10:
+                        dir = DOWN;
+                        break;
+                }
+                break;
+            case 3:
+                img = OBSTACLE3;
+                switch(neighbors) {
+                    case 14:
+                        dir = DOWN;
+                        break;
+                    case 13:
+                        dir = UP;
+                        break;
+                    case 11:
+                        dir = LEFT;
+                        break;
+                    case 7:
+                        dir = RIGHT;
+                        break;
+                }
+                break;
+            case 4:
+                dir = NO_DIR;
+                img = OBSTACLE4;
+                break;
+        }
+        return [dir, img];
+    }
     this.getGridValue = function(pos) {
         // warning, does not check if pos is ok
         return this.grid[pos.x][pos.y];
+    }
+    this.isEmpty = function(pos) {
+        return this.grid[pos.x][pos.y] === GRID_EMPTY;
+    }
+    this.isSnake = function(pos) {
+        return this.grid[pos.x][pos.y] === GRID_SNAKE;
+    }
+    this.isFood = function(pos) {
+        return this.grid[pos.x][pos.y] < 0;
+    }
+    this.isObstacle = function(pos) {
+        return this.grid[pos.x][pos.y] === GRID_OBSTACLE;
     }
     this.addSnakeBoxToGrid = function(pos) {
         // warning, does not check if pos is ok
@@ -621,8 +722,29 @@ function Board(w, h, styleclass, id) {
                 case FOOD: // Food
                     this.imageclass = "snake-food-block";
                     break;
+                case TMP_FOOD: // Temporary Food
+                    this.imageclass = "snake-tmp-food-block";
+                    break;
                 case OBSTACLE: // Obstacle
+                    this.imageclass = "snake-snakebody-obstacle";
+                    break;
+                case OBSTACLE0: // Obstacle
+                    this.imageclass = "snake-snakebody-obstacle0";
+                    break;
+                case OBSTACLE1: // Obstacle
                     this.imageclass = "snake-snakebody-obstacle1";
+                    break;
+                case OBSTACLE2STRAIGHT: // Obstacle
+                    this.imageclass = "snake-snakebody-obstacle2a";
+                    break;
+                case OBSTACLE2TURN: // Obstacle
+                    this.imageclass = "snake-snakebody-obstacle2b";
+                    break;
+                case OBSTACLE3: // Obstacle
+                    this.imageclass = "snake-snakebody-obstacle3";
+                    break;
+                case OBSTACLE4: // Obstacle
+                    this.imageclass = "snake-snakebody-obstacle4";
                     break;
                 default: //Error
                     this.imageclass = "snake-snakebody-error";
@@ -760,6 +882,9 @@ function Snake(board, keys, speed, AI, growth, numFood) {
     this.initGame = function(obstacles) {
         // start game: initialize board, and launch snake movement
         var me = this;
+        if (obstacles === undefined) {
+            obstacles = [];
+        }
         this.board.initBoard(obstacles, this.numFood);
         // Assumes that snake has first_pos:head and last_pos:tail
         this.head = 0;
@@ -850,7 +975,7 @@ function Snake(board, keys, speed, AI, growth, numFood) {
     
     this.advanceTime = function() {
         // move time one step, so that the game advances
-        var tmp,
+        var tmp, tmp_pos,
             i, j,
             food_pos,
             allowed_dirs,
@@ -869,9 +994,9 @@ function Snake(board, keys, speed, AI, growth, numFood) {
         if (this.isAI) {
             [allowed_dirs, allowed_pos] = this.board.getNoDeathMovements(this.board.getSnakePosition(this.head));
             if (allowed_dirs.length === 0) {
-                console.log("Trapped --> I'll have to kill myself...");
+                console.log("Trapped, committing suicide...");
                 [allowed_dirs, allowed_pos] = this.board.getAllAllowedMovements(this.board.getSnakePosition(this.head), this.direction);
-                //this.isPaused = true;
+                this.isPaused = true;
             }
             for (i=0; i<allowed_dirs.length; i++) {
                 for (j=0; j<this.board.food.length; j++) {
@@ -910,11 +1035,12 @@ function Snake(board, keys, speed, AI, growth, numFood) {
             tmp = "";
             for (var i=0; i<this.board.h; i++) {
                 for (var j=0; j<this.board.w; j++) {
-                    if (this.board.grid[j][i] == GRID_EMPTY) { //free space
+                    tmp_pos = new Position(j, i);
+                    if (this.board.isEmpty(tmp_pos)) { //free space
                         tmp += "..";
-                    } else if (this.board.grid[j][i] == GRID_SNAKE) { //snake
+                    } else if (this.board.isSnake(tmp_pos)) { //snake
                         tmp += "@ ";
-                    } else if (this.board.grid[j][i] < 0) { //food
+                    } else if (this.board.isFood(tmp_pos)) { //food
                         tmp += "X ";
                     } else {
                         tmp += "??"; //obstacles
