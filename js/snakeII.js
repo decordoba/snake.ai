@@ -112,7 +112,8 @@ function Board(w, h, styleclass, id) {
                 this.addRandomFood(i);
             }
         }
-        this.addRandomTemporaryFood(100, new Position(1, 0), 0);
+        //this.addRandomTemporaryFood(100, new Position(1, 0), 0);
+        this.setPosToTemporaryFood(new Position(0, 2), 50, new Position(-1, 0), 0);
     }
     this.resetGrid = function() {
         // create grid and set it to all zeros
@@ -424,6 +425,7 @@ function Board(w, h, styleclass, id) {
             //whether we eat food or not, we must erase the old head
             this.snake[old_head_idx].setToBody(direction);
         }
+        this.updateTemporaryFood(); //move temporary food (if necessary)
         if (use_tongue) {
             tongue_pos = this.useTongue(head_pos, direction, this.max_z_increment);
             for (i=0; i<tongue_pos.length; i++) {
@@ -440,7 +442,6 @@ function Board(w, h, styleclass, id) {
         if (eaten) {
             this.handleFoodEaten(head_pos, tongue_pos); //if we eat while we use tongue, food will not appear in tongue
         }
-        this.updateTemporaryFood();
         if (eaten || eaten_tongue > 0) {
             for (i=0; i<growth; i++) {
                 //new_head and old_tail are the same, they point to the old tail segment
@@ -570,9 +571,7 @@ function Board(w, h, styleclass, id) {
         // create food element and place it in an empty random position
         var new_box, pos = this.findRandomFreePosition();
         this.addFoodToGrid(pos);
-        if (idx === undefined) {
-            idx = 0;
-        }
+        if (idx === undefined) { idx = 0; }
         new_box = this.addBox(pos, NO_DIR, FOOD, Z_FOOD, "snake_food_" + idx);
         this.food.push(new_box);
     }
@@ -580,6 +579,7 @@ function Board(w, h, styleclass, id) {
         // create food element and place it in a position pos
         var new_box;
         this.addFoodToGrid(pos);
+        if (idx === undefined) { idx = 0; }
         new_box = this.addBox(pos, NO_DIR, FOOD, Z_FOOD, "snake_food_" + idx);
         this.food.push(new_box);
     }
@@ -587,9 +587,16 @@ function Board(w, h, styleclass, id) {
         // create temporary food element and place it in an empty random position
         var new_box, pos = this.findRandomFreePosition();
         this.addTemporaryFoodToGrid(pos);
-        if (idx === undefined) {
-            idx = 0;
-        }
+        if (idx === undefined) { idx = 0; }
+        new_box = this.addSmartBox(pos, NO_DIR, TMP_FOOD, Z_FOOD, ttl, movement, "snake_tmp_food_" + idx);
+        this.food.push(new_box);
+        this.tmp_food.push(new_box);
+    }
+    this.setPosToTemporaryFood = function(pos, ttl, movement, idx) {
+        // create food element and place it in a position pos
+        var new_box;
+        this.addTemporaryFoodToGrid(pos);
+        if (idx === undefined) { idx = 0; }
         new_box = this.addSmartBox(pos, NO_DIR, TMP_FOOD, Z_FOOD, ttl, movement, "snake_tmp_food_" + idx);
         this.food.push(new_box);
         this.tmp_food.push(new_box);
