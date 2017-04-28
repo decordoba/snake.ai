@@ -57,7 +57,8 @@ function Board(w, h, styleclass, id) {
     this.grid = [];                 //board with positions
     this.snake = [];                //boxes that make the snake
     this.tongue = [];               //boxes that make the tongue
-    this.food = [];                 //boxes that make the food
+    this.food = [];                 //boxes that make the food (includes regular and temporary food)
+    this.tmp_food = [];             //boxes that make the temporary food (food that disappear after some time)
     this.obstacles = [];            //boxes than make the obstacles
     this.element;                   //div element used as the board
     this.stacked_positions = {};    //when snake grows, cell position with more than one snake segment
@@ -85,7 +86,8 @@ function Board(w, h, styleclass, id) {
           Z_OBSTACLE = 2,    Z_FOOD = 5,
 
           GRID_OBSTACLE = 1, GRID_SNAKE = 2, //things that kill the snake when eaten must be greater than 0
-          GRID_EMPTY = 0,    GRID_FOOD = -1; //food (things that make the snake grow) must be smaller than 0
+          GRID_FOOD = -1,    GRID_TMP_FOOD = -2, //food (things that make the snake grow) must be smaller than 0
+          GRID_EMPTY = 0;
 
     this.initBoard = function(obstacles, num_food) {
         // initialize board with obstacles and snake
@@ -110,6 +112,7 @@ function Board(w, h, styleclass, id) {
                 this.addRandomFood(i);
             }
         }
+        this.addRandomTemporaryFood(0, 10, new Position(1, 0));
     }
     this.resetGrid = function() {
         // create grid and set it to all zeros
@@ -332,45 +335,83 @@ function Board(w, h, styleclass, id) {
         // warning, does not check if pos is ok
         this.grid[pos.x][pos.y] = GRID_FOOD;
     }
+    this.addTemporaryFoodToGrid = function(pos) {
+        // warning, does not check if pos is ok
+        this.grid[pos.x][pos.y] = GRID_TMP_FOOD;
+    }
+    this.removeFoodFromGrid = function(pos) {
+        // make sure that food disappears from grid (only necessary if we eat with tongue)
+        if (this.getGridValue(pos) < 0) {
+            this.removeBoxFromGrid(pos);
+        }
+    }
     this.removeBoxFromGrid = function(pos) {
         // warning, does not check if pos is ok
         this.grid[pos.x][pos.y] = GRID_EMPTY;
     }
-    this.addBox = function(pos, dir, element, z_index, id) {
+    this.addBox = function(pos, dir, img, z_index, id) {
         // creates box, gives style to it (so it is shown), and returns it
-        var box = new Box(pos, this.side, dir, element, z_index, id);
+        var box = new Box(pos, this.side, dir, img, z_index, id);
         box.createBox(this.element);
         return box;
     }
-    this.moveFood = function(old_food, ko_positions) {
-        // move food to a new free random position, which cannot be in ko_positions
+    this.addSmartBox = function(pos, dir, img, z_index, ttl, movement, id) {
+        // creates smart box, gives style to it (so it is shown), and returns it
+        var box = new SmartBox(pos, this.side, dir, img, z_index, ttl, movement, id);
+        box.createBox(this.element);
+        return box;
+    }
+    this.updateTemporaryFood = function() {
+        var i, idx_food;
+        for (i=0; i<this.tmp_food.length; i++) {
+            if (this.tmp_food[i].advancePosition()) {
+                idx_food = this.tmp_food[i].pos.findObjectIndex(this.food);
+                this.removeTemporaryFood(idx_food, i);
+            } else {
+                this.removeFoodFromGrid(this.tmp_food[i].pos);
+                this.addTemporaryFoodToGrid(this.tmp_food[i].pos);
+            }
+        }
+    }
+    this.handleFoodEaten = function(food_pos, ko_pos) {
+        // handle regular or temporary food when eaten. Food will only appear again if it is regular
+        var idx_food = food_pos.findObjectIndex(this.food),
+            idx_tmp_food = food_pos.findObjectIndex(this.tmp_food);
+        this.removeFoodFromGrid(this.food[idx_food].pos);
+        if (idx_tmp_food === -1) { // new food only appears if it is not temporary
+            this.moveFood(idx_food, ko_pos);
+        } else {
+            this.removeTemporaryFood(idx_food, idx_tmp_food);
+        }
+    }
+    this.removeTemporaryFood = function(idx_food, idx_tmp_food) {
+        this.removeFoodFromGrid(this.food[idx_food].pos);
+        this.tmp_food[idx_tmp_food].removeBox();
+        this.food.splice(idx_food, 1);
+        this.tmp_food.splice(idx_tmp_food, 1);
+    }
+    this.moveFood = function(idx, ko_positions) {
+        // move food in this.food[idx] to a new free random position, which cannot be in ko_positions
         var pos = this.findRandomFreePosition(), i, pos_ok;
         if (ko_positions === undefined) {
-            while (pos.x === old_food.x && pos.y === old_food.y) {
-                pos = this.findRandomFreePosition();
-            }
+            ko_positions = [this.food[idx].pos];
         } else {
-            pos_ok = false;
-            while (!pos_ok) {
-                pos_ok = true;
-                for (i=0; i<ko_positions.length; i++) {
-                    if (pos.x === ko_positions[i].x && pos.y === ko_positions[i].y) {
-                        pos = this.findRandomFreePosition();
-                        pos_ok = false;
-                        break;
-                    }
+            if (this.food[idx].pos.findIndex(ko_positions) === -1) {
+                ko_positions.concat(this.food[idx].pos);
+            }
+        }
+        pos_ok = false;
+        while (!pos_ok) {
+            pos_ok = true;
+            for (i=0; i<ko_positions.length; i++) {
+                if (pos.compare(ko_positions[i])) {
+                    pos = this.findRandomFreePosition();
+                    pos_ok = false;
+                    break;
                 }
             }
         }
-        for (i=0; i<this.food.length; i++) {
-            if (this.food[i].pos.x === old_food.x && this.food[i].pos.y === old_food.y) {
-                break;
-            }
-        }
-        if (this.getGridValue(old_food) < 0) {
-            this.removeBoxFromGrid(old_food);
-        }
-        this.food[i].setPosition(pos);
+        this.food[idx].setPosition(pos);
         this.addFoodToGrid(pos);
     }
     this.moveSnake = function(old_head_idx, new_head_idx, direction, use_tongue, growth) {
@@ -389,7 +430,7 @@ function Board(w, h, styleclass, id) {
                 if (this.getGridValue(tongue_pos[i]) < 0) { //food
                     eaten_tongue += 1;
                     console.log("Food eaten with tongue");
-                    this.moveFood(tongue_pos[i], tongue_pos);
+                    this.handleFoodEaten(tongue_pos[i], tongue_pos);
                 }
             }
         } else {
@@ -397,8 +438,9 @@ function Board(w, h, styleclass, id) {
         }
         [eaten, death] = this.updateSnakeInGrid(head_pos, old_tail.pos, growth);
         if (eaten) {
-            this.moveFood(head_pos, tongue_pos); //if we eat while we use tongue, food will not appear in tongue
+            this.handleFoodEaten(head_pos, tongue_pos); //if we eat while we use tongue, food will not appear in tongue
         }
+        this.updateTemporaryFood();
         if (eaten || eaten_tongue > 0) {
             for (i=0; i<growth; i++) {
                 //new_head and old_tail are the same, they point to the old tail segment
@@ -541,6 +583,17 @@ function Board(w, h, styleclass, id) {
         new_box = this.addBox(pos, NO_DIR, FOOD, Z_FOOD, "snake_food_" + idx);
         this.food.push(new_box);
     }
+    this.addRandomTemporaryFood = function(idx, ttl, movement) {
+        // create temporary food element and place it in an empty random position
+        var new_box, pos = this.findRandomFreePosition();
+        this.addTemporaryFoodToGrid(pos);
+        if (idx === undefined) {
+            idx = 0;
+        }
+        new_box = this.addSmartBox(pos, NO_DIR, TMP_FOOD, Z_FOOD, ttl, movement, "snake_tmp_food_" + idx);
+        this.food.push(new_box);
+        this.tmp_food.push(new_box);
+    }
     this.getSnakePosition = function(idx) {
         // get position of the snake segment at idx. warning, does not check that the index is valid
         return this.snake[idx].pos;
@@ -627,10 +680,18 @@ function Board(w, h, styleclass, id) {
     }
 
     // define SmartBox constructor (box that moves, changes in every iteration and dies after timeout)
-    function SmartBox(pos, side, dir, images, z_index, id, ttl, movement) {
-        Box.call(this, pos, side, dir, images[0], z_index, id);
+    function SmartBox(pos, side, dir, images, z_index, ttl, movement, id) {
+        Box.call(this, pos, side, dir, images[0] || images, z_index, id);
         this.ttl = ttl;
         this.movement = movement;
+
+        this.advancePosition = function() {
+            this.pos.x += this.movement.x;
+            this.pos.y += this.movement.y;
+            this.updatePosition();
+            this.ttl -= 1;
+            return this.ttl <= 0;
+        }
     }
 
     // define cell constructor
@@ -860,6 +921,9 @@ function Board(w, h, styleclass, id) {
             box.createBox(container);
             return box;
         }
+        this.removeBox = function() {
+            this.element.remove();
+        }
     }
 }
 
@@ -1066,16 +1130,17 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
-    3. Add obstacles with shapes (so they look like walls)
-    4. Make constants (DIR, IMAGE, Z-INDEX...) depend on constants, instead of hard-coded values
+    2. Fix problem board loads smaller or bigger sometimes
+    3. Add obstacles with shapes (so they look like walls) --> modify so they are like original (lights and shades)
     5. Make box with snake only functions inherit from box (fat, makeHead, etc.)
     6. Make nice looking snake
     7. Implement moving food
   7.5. Handle case where there is no room for new food
   7.6. Change head so that it opens mouth when about to eat sth (attention tongue)
-  7.7. Change color when dying
+  7.7. Change color when dying / make snake blink when death
   7.8. Make sure tongue works fine even when dying and showing tongue, mouth open and tongue, etc
     6. Handle case in which one of the positions where the snake can go is where its tail is. From grid its seems that it is not allowed but in next movement it would be because tail would not be there anymore (carefull, stacked!)
+    8. Make exact copy original game (except maybe powerups... for now)
     9. Implement and test multiplayer game
    10. Create crazy game modes: sth that when you eat you put obstacle in opponent map, sth that when you eat a food you start growing from your tail and never stop,
        sth interacting with different snakes / boards (2 snakes, one food, race) (change board when eating food) (powerups (invisibility, strength, lives, speed, smaller...))
