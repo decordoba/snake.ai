@@ -31,6 +31,7 @@ By Daniel de Cordoba Gil
     --snake-head-tongue: url('http://localhost/snakeII/css/images/missing_image1.png');
     --snake-head-dead:   url('http://localhost/snakeII/css/images/missing_image2.png');
     --snake-food:        url('http://localhost/snakeII/css/images/missing_image2.png');
+    --snake-tmp-food:    url('http://localhost/snakeII/css/images/missing_image2.png');
     --snake-tongue-body: url('http://localhost/snakeII/css/images/missing_image1.png');
     --snake-tongue-tip:  url('http://localhost/snakeII/css/images/missing_image1.png');
     --snake-obstacle:    url('http://localhost/snakeII/css/images/missing_image1.png');
@@ -93,6 +94,9 @@ By Daniel de Cordoba Gil
 }
 .snake-food-block {
     background-image: var(--snake-food);
+}
+.snake-tmp-food-block {
+    background-image: var(--snake-tmp-food);
 }
 .snake-snakebody-tongue-body {
     background-image: var(--snake-tongue-body);
