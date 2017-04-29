@@ -364,12 +364,15 @@ function Board(w, h, styleclass, id) {
     }
     this.updateTemporaryFood = function() {
         var i, idx_food;
-        for (i=0; i<this.tmp_food.length; i++) {
+        for (i=this.tmp_food.length - 1; i>=0; i--) { //we iterate in opposite direction so removing elements does not affect indexes
             this.removeFoodFromGrid(this.tmp_food[i].pos);
             if (this.tmp_food[i].advancePosition()) {
                 idx_food = this.tmp_food[i].pos.findObjectIndex(this.food);
                 this.removeTemporaryFood(idx_food, i);
             } else {
+                if (this.getGridValue(this.tmp_food[i].pos) !== GRID_EMPTY) {
+                    this.tmp_food[i].changeDirection();
+                }
                 this.addTemporaryFoodToGrid(this.tmp_food[i].pos);
             }
         }
@@ -417,6 +420,7 @@ function Board(w, h, styleclass, id) {
     }
     this.moveSnake = function(old_head_idx, new_head_idx, direction, use_tongue, growth) {
         // move snake towards direction, save new head in old tail and move its position, so it seems that snake moves
+        // also handle food eaten and death
         var eaten, death, i, tongue_pos, eaten_tongue = 0, prev_z_incr,
             new_tail_idx = (new_head_idx - 1 + this.snake.length) % this.snake.length,
             head_pos = this.getNewHeadPosition(this.snake[old_head_idx].pos, direction),
@@ -690,19 +694,32 @@ function Board(w, h, styleclass, id) {
     function SmartBox(pos, side, dir, images, z_index, ttl, movement, w, h, id) {
         Box.call(this, pos, side, dir, images[0] || images, z_index, id);
         this.ttl = ttl;
+        this.is_static = movement.x === 0 && movement.y === 0;
         this.movement = movement;
         this.max_pos = new Position(w - 1, h - 1);
         this.min_pos = new Position(0, 0);
 
         this.advancePosition = function() {
-            this.pos.x += this.movement.x;
-            this.pos.y += this.movement.y;
-            this.correctPosition();
-            this.updatePosition();
+            // move food in direction of this.movement and reduce ttl
+            if (!this.is_static) {
+                this.pos.add(this.movement);
+                this.correctPosition();
+                this.updatePosition();
+            }
             this.ttl -= 1;
             return this.ttl <= 0;
         }
+        this.changeDirection = function() {
+            // change movement direction and go in new direction one step (used when food bounces on things)
+            if (!this.is_static) {
+                this.movement.x = -this.movement.x;
+                this.movement.y = -this.movement.y;
+                this.ttl += 1;
+                this.advancePosition();
+            }
+        }
         this.correctPosition = function() {
+            // teleport food from one side to the other of the board when it reaches edges
             if (this.pos.x > this.max_pos.x) {
                 this.pos.x = this.min_pos.x;
             } else if (this.pos.x < this.min_pos.x) {
@@ -1152,7 +1169,8 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 
 /*
 TODO:
-    1. Problem when temporary food goes over another food
+    1. Problem when food bounces with other moving food (more noticable when they are going in perpendicular dir)
+  1.5. I will probably have to rethink all the grid system, so everything happens at the same time (right now, the food moves first, then the snake, and if we eat food, it can only appear in current grid, not in future grid after movement)
     2. Fix problem board loads smaller or bigger sometimes
     3. Add obstacles with shapes (so they look like walls) --> modify so they are like original (lights and shades)
     5. Make box with snake only functions inherit from box (fat, makeHead, etc.)
