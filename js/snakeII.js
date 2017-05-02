@@ -51,7 +51,7 @@ function Position(x, y) {
 function Board(w, h, styleclass, id) {
     this.w = w;                     //width grid
     this.h = h;                     //height grid
-    this.side = 20;                 //px, width/height of every box
+    this.side = -1;                 //px, width/height of every box
     this.class = styleclass;        //class for box image
     this.id = id;                   //unique id of the box
     this.grid = [];                 //board with positions
@@ -91,14 +91,22 @@ function Board(w, h, styleclass, id) {
 
     this.initBoard = function(obstacles, num_food) {
         // initialize board with obstacles and snake
-        var i;
+        var i, image, side, me = this;
         this.resetGrid();
-        this.side = this.getBoxSide(HEAD); //head
+        this.createBoard();
+        image = this.getBoxImage(HEAD); //set this.side to width of head box image
+        image.onload = function() {
+            side = me.getImageSide(image);
+            me.loadBoard(side, obstacles, num_food);
+        }
+    }
+    this.loadBoard = function(side, obstacles, num_food) {
+        this.side = side;
         if (this.side % 4 !== 0) {
             console.log("The theme used may not be displayed perfectly, as it is using boxes with side:", this.side, "px.");
             console.log("It is recommended to use images with a side that is a multiple of 4, like 16, 20 or 24 px.");
         }
-        this.createBoard();
+        this.setBoardDimensions();
         this.loadImages();
         this.addObstacles(obstacles);
         this.initSnake();
@@ -135,8 +143,11 @@ function Board(w, h, styleclass, id) {
             document.body.appendChild(this.element);
         }
         this.element.className = this.class;
+    }
+    this.setBoardDimensions = function() {
         this.element.style.width = (this.side * this.w) + "px";
         this.element.style.height = (this.side * this.h) + "px";
+        return this.side > 0;
     }
     this.addObstacles = function(obstacles) {
         // add obstacles to grid and create (and show) obstacle elements
@@ -173,12 +184,12 @@ function Board(w, h, styleclass, id) {
             this.tongue.push(new_box);
         }
     }
-    this.getBoxSide = function(box_num) {
-        // get head box image, and use its side as the side for all boxes in board
+    this.getBoxImage = function(box_num) {
+        // get box image url, and return an image with such url
         var box, container, image_src, image, side;
         if (document.defaultView && document.defaultView.getComputedStyle) {
             if (box_num == undefined) {
-                box_num = 0;
+                box_num = HEAD;
             }
             container = document.createElement("div");
             container.className = this.class;
@@ -189,14 +200,15 @@ function Board(w, h, styleclass, id) {
             image_src = document.defaultView.getComputedStyle(box.element, null).backgroundImage.replace(/url\((['"])?(.*?)\1\)/gi, '$2').split(',')[0];
             image = new Image();
             image.src = image_src;
-            side = Math.max(image.width, image.height) || 20;
             container.remove();
-            console.log("Box side:", side, "px");
-        } else {
-            // In IE, the size will be 20 always (anyway, I don't expect many players to use IE)
-            side = 20;
         }
-        return side;
+        return image;
+    }
+    this.getImageSide = function(image) {
+        if (image === undefined) {
+            return 20;
+        }
+        return Math.max(image.width, image.height);
     }
     this.loadImages = function() {
         // use dummy box to load all images, so they are stored in cache
@@ -989,17 +1001,17 @@ function Snake(board, keys, speed, AI, growth, numFood) {
             obstacles = [];
         }
         this.board.initBoard(obstacles, this.numFood);
-        // Assumes that snake has first_pos:head and last_pos:tail
-        this.head = 0;
-        this.tail = this.board.snake.length - 1;
-        if (this.growth === undefined) {
-            this.growth = 1;
-        }
-        this.direction = this.board.snake[this.head].dir;
         window.addEventListener("keydown", function(evt) {
             me.keyListener(evt);
         }, false);
         window.onload = function() {
+            // Assumes that snake has first_pos:head and last_pos:tail
+            me.head = 0;
+            me.tail = me.board.snake.length - 1;
+            if (me.growth === undefined) {
+                me.growth = 1;
+            }
+            me.direction = me.board.snake[me.head].dir;
             me.scheduleNextStep();
         }
     }
