@@ -169,7 +169,7 @@ function Board(w, h, styleclass, id) {
             i, new_box;
         for (i=0; i<positions.length; i++) {
             this.addSnakeBoxToGrid(positions[i]);
-            new_box = this.addBox(positions[i], directions[i], snake_parts[i], Z_SNAKE, "snake_cell_" + i);
+            new_box = this.addSnakeBox(positions[i], directions[i], snake_parts[i], Z_SNAKE, "snake_cell_" + i);
             this.snake.push(new_box);
         }
     }
@@ -365,6 +365,12 @@ function Board(w, h, styleclass, id) {
     this.addBox = function(pos, dir, img, z_index, id) {
         // creates box, gives style to it (so it is shown), and returns it
         var box = new Box(pos, this.side, dir, img, z_index, id);
+        box.createBox(this.element);
+        return box;
+    }
+    this.addSnakeBox = function(pos, dir, img, z_index, id) {
+        // creates snake box, gives style to it (so it is shown), and returns it
+        var box = new SnakeBox(pos, this.side, dir, img, z_index, id);
         box.createBox(this.element);
         return box;
     }
@@ -745,6 +751,73 @@ function Board(w, h, styleclass, id) {
         }
     }
 
+    // define SnakeBox constructor (boxes that make the snake: can be fat or not and offers functions to change form head to body, etc.)
+    function SnakeBox(pos, side, dir, image, z_index, id) {
+        Box.call(this, pos, side, dir, image, z_index, id);
+
+        this.makeFat = function(fat) {
+            // makes snake segment fat (or unfat if set to false)
+            if (fat === undefined) {
+                fat = true;
+            }
+            this.fat = fat;
+        }
+        this.setToHead = function(dir, tongue, open_mouth) {
+            // set box style to head
+            this.dir = dir;
+            this.image = HEAD; //head
+            if (tongue === true) {
+                this.image = HEAD_TONGUE; //head with tongue
+            } else if (open_mouth === true) {
+                this.image = MOUTH; //head with open mouth
+            }
+            this.fat = false; //make sure a new head is not fat unless purposely set later
+            this.updateClass();
+        }
+        this.setToBody = function(head_dir) {
+            // set box to "neck" or 1st body segment after head. uses head_dir to calculate turns
+            var diff = 0;
+            if (this.fat) {
+                if (head_dir == this.dir) {
+                    this.image = BODY_FAT; //body straight fat after eating
+                } else {
+                    diff = head_dir - this.dir;
+                    if (diff === 1 || diff === -3) {
+                        this.image = TURN_R_FAT; //turn right fat after eating
+                    } else {
+                        this.image = TURN_L_FAT; //turn left fat after eating
+                    }
+                }
+            } else {
+                if (head_dir == this.dir) {
+                    this.image = BODY; //body straight
+                } else {
+                    diff = head_dir - this.dir;
+                    if (diff === 1 || diff === -3) {
+                        this.image = TURN_R; //turn right
+                    } else {
+                        this.image = TURN_L; //turn left
+                    }
+                }
+            }
+            this.updateClass();
+        }
+        this.setToTail = function() {
+            // set box to tail and correct tail direction after a turn
+            if (this.image === TURN_L || this.image === TURN_L_FAT) {
+                this.dir = (this.dir + 3) % 4;
+            } else if (this.image == TURN_R || this.image == TURN_R_FAT) {
+                this.dir = (this.dir + 1) % 4;
+            }
+            if (this.fat) {
+                this.image = TAIL_FAT; //tail fat after eating
+            } else{
+                this.image = TAIL; //tail
+            }
+            this.updateClass();
+        }
+    }
+
     // define cell constructor
     function Box(pos, side, dir, image, z_index, id) {
         this.pos = pos;                 //(x,y) position in board
@@ -871,23 +944,18 @@ function Board(w, h, styleclass, id) {
             this.element.style.top = this.px_pos.y + "px";
         }
         this.setZIncrement = function(incr) {
+            // set z_increment to incr, and add such incr to the default's box z-index
             this.z_increment = incr;
             this.element.style.zIndex = this.z_index + this.z_increment;
         }
         this.resetZIncrement = function() {
+            // set z_increment to 0 and set the box's z-index to its default value
             var prev_incr = this.z_increment;
             if (this.z_increment !== 0) {
                 this.z_increment = 0;
                 this.element.style.zIndex = this.z_index;
             }
             return prev_incr;
-        }
-        this.makeFat = function(fat) {
-            // makes snake segment fat (or unfat if set to false)
-            if (fat === undefined) {
-                fat = true;
-            }
-            this.fat = fat;
         }
         this.setImageToValue = function(value) {
             // set box image to value
@@ -903,60 +971,6 @@ function Board(w, h, styleclass, id) {
             // set box image and dir to value
             this.image = image;
             this.dir = dir;
-            this.updateClass();
-        }
-        this.setToHead = function(dir, tongue, open_mouth) {
-            // set box style to head
-            this.dir = dir;
-            this.image = HEAD; //head
-            if (tongue === true) {
-                this.image = HEAD_TONGUE; //head with tongue
-            } else if (open_mouth === true) {
-                this.image = MOUTH; //head with open mouth
-            }
-            this.fat = false; //make sure a new head is not fat unless purposely set later
-            this.updateClass();
-        }
-        this.setToBody = function(head_dir) {
-            // set box to "neck" or 1st body segment after head. uses head_dir to calculate turns
-            var diff = 0;
-            if (this.fat) {
-                if (head_dir == this.dir) {
-                    this.image = BODY_FAT; //body straight eaten fat after eating
-                } else {
-                    diff = head_dir - this.dir;
-                    if (diff === 1 || diff === -3) {
-                        this.image = TURN_R_FAT; //turn right fat after eating
-                    } else {
-                        this.image = TURN_L_FAT; //turn left fat after eating
-                    }
-                }
-            } else {
-                if (head_dir == this.dir) {
-                    this.image = BODY; //body straight
-                } else {
-                    diff = head_dir - this.dir;
-                    if (diff === 1 || diff === -3) {
-                        this.image = TURN_R; //turn right
-                    } else {
-                        this.image = TURN_L; //turn left
-                    }
-                }
-            }
-            this.updateClass();
-        }
-        this.setToTail = function() {
-            // set box to tail and correct tail direction after a turn
-            if (this.image === TURN_L || this.image === TURN_L_FAT) {
-                this.dir = (this.dir + 3) % 4;
-            } else if (this.image == TURN_R || this.image == TURN_R_FAT) {
-                this.dir = (this.dir + 1) % 4;
-            }
-            if (this.fat) {
-                this.image = TAIL_FAT; //tail fat after eating
-            } else{
-                this.image = TAIL; //tail
-            }
             this.updateClass();
         }
         this.setPosition = function(new_pos) {
@@ -1183,11 +1197,9 @@ function Snake(board, keys, speed, AI, growth, numFood) {
 TODO:
     1. Problem when food bounces with other moving food (more noticable when they are going in perpendicular dir)
   1.5. I will probably have to rethink all the grid system, so everything happens at the same time (right now, the food moves first, then the snake, and if we eat food, it can only appear in current grid, not in future grid after movement)
-    2. Fix problem board loads smaller or bigger sometimes
     3. Add obstacles with shapes (so they look like walls) --> modify so they are like original (lights and shades)
     5. Make box with snake only functions inherit from box (fat, makeHead, etc.)
     6. Make nice looking snake
-    7. Implement moving food
   7.5. Handle case where there is no room for new food
   7.6. Change head so that it opens mouth when about to eat sth (attention tongue)
   7.7. Change color when dying / make snake blink when death
