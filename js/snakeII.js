@@ -439,7 +439,7 @@ function Board(w, h, styleclass, id) {
     this.moveSnake = function(old_head_idx, new_head_idx, direction, use_tongue, growth) {
         // move snake towards direction, save new head in old tail and move its position, so it seems that snake moves
         // also handle food eaten and death
-        var eaten, death, i, tongue_pos, eaten_tongue = 0, prev_z_incr,
+        var eaten, death, i, tongue_pos, eaten_tongue = 0, prev_z_incr, open_mouth = false,
             new_tail_idx = (new_head_idx - 1 + this.snake.length) % this.snake.length,
             head_pos = this.getNewHeadPosition(this.snake[old_head_idx].pos, direction),
             old_tail = this.snake[new_head_idx];
@@ -459,6 +459,8 @@ function Board(w, h, styleclass, id) {
             }
         } else {
             this.hideTongue();
+            // if we are not using the tongue, let's see if we must open the mouth
+            open_mouth = this.getGridValue(this.getNewHeadPosition(head_pos, direction)) < 0;
         }
         [eaten, death] = this.updateSnakeInGrid(head_pos, old_tail.pos, growth);
         if (eaten) {
@@ -480,7 +482,7 @@ function Board(w, h, styleclass, id) {
             // style new last segment to a tail
             this.snake[new_tail_idx].setToTail();
         }
-        this.snake[new_head_idx].setToHead(direction, use_tongue);
+        this.snake[new_head_idx].setToHead(direction, use_tongue, open_mouth);
         this.snake[new_head_idx].setPosition(head_pos);
         if (death) {
             this.max_z_increment += 1;
@@ -749,6 +751,14 @@ function Board(w, h, styleclass, id) {
                 this.pos.y = this.max_pos.y;
             }
         }
+        this.clone = function(container, id) {
+            // return a deep copy of the current box, changing only its id, and add it to the container
+            var box = new SmartBox(new Position(this.pos.x, this.pos.y), this.side,
+                                   this.dir, this.image, this.z_index, this.ttl, this.movement,
+                                   this.max_pos.x + 1, this.max_pos.y + 1, id);
+            box.createBox(container);
+            return box;
+        }
     }
 
     // define SnakeBox constructor (boxes that make the snake: can be fat or not and offers functions to change form head to body, etc.)
@@ -815,6 +825,13 @@ function Board(w, h, styleclass, id) {
                 this.image = TAIL; //tail
             }
             this.updateClass();
+        }
+        this.clone = function(container, id) {
+            // return a deep copy of the current box, changing only its id, and add it to the container
+            var box = new SnakeBox(new Position(this.pos.x, this.pos.y), this.side,
+                                   this.dir, this.image, this.z_index, id);
+            box.createBox(container);
+            return box;
         }
     }
 
@@ -980,7 +997,7 @@ function Board(w, h, styleclass, id) {
             this.updatePosition();
         }
         this.clone = function(container, id) {
-            // return a deep copy of the current box, changing only its id, and add it to the container 
+            // return a deep copy of the current box, changing only its id, and add it to the container
             var box = new Box(new Position(this.pos.x, this.pos.y), this.side,
                               this.dir, this.image, this.z_index, id);
             box.createBox(container);
@@ -1198,7 +1215,6 @@ TODO:
     1. Problem when food bounces with other moving food (more noticable when they are going in perpendicular dir)
   1.5. I will probably have to rethink all the grid system, so everything happens at the same time (right now, the food moves first, then the snake, and if we eat food, it can only appear in current grid, not in future grid after movement)
     3. Add obstacles with shapes (so they look like walls) --> modify so they are like original (lights and shades)
-    5. Make box with snake only functions inherit from box (fat, makeHead, etc.)
     6. Make nice looking snake
   7.5. Handle case where there is no room for new food
   7.6. Change head so that it opens mouth when about to eat sth (attention tongue)
