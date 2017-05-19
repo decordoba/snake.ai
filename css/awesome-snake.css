@@ -183,6 +183,93 @@ By Daniel de Cordoba Gil
     transform: rotate(180deg);
 }
 
+/* Directions (used to turn images) plus mirroring/flipping */
+.snake-direction-left.snake-mirror-horizontal {
+    -webkit-transform: rotate(90deg) scaleY(-1);
+    -moz-transform: rotate(90deg) scaleY(-1);
+    -ms-transform: rotate(90deg);
+    -ms-filter: "FlipH";
+    -o-transform: rotate(90deg) scaleY(-1);
+    transform: rotate(90deg) scaleY(-1);
+
+}
+.snake-direction-down.snake-mirror-horizontal {
+    -webkit-transform: rotate(0deg) scaleX(-1);
+    -moz-transform: rotate(0deg) scaleX(-1);
+    -ms-transform: rotate(0deg);
+    -ms-filter: "FlipH";
+    -o-transform: rotate(0deg) scaleX(-1);
+    transform: rotate(0deg) scaleX(-1);
+}
+.snake-direction-right.snake-mirror-horizontal {
+    -webkit-transform: rotate(-90deg) scaleY(-1);
+    -moz-transform: rotate(-90deg) scaleY(-1);
+    -ms-transform: rotate(-90deg);
+    -ms-filter: "FlipH";
+    -o-transform: rotate(-90deg) scaleY(-1);
+    transform: rotate(-90deg) scaleY(-1);
+}
+.snake-direction-up.snake-mirror-horizontal {
+    -webkit-transform: rotate(180deg) scaleX(-1);
+    -moz-transform: rotate(180deg) scaleX(-1);
+    -ms-transform: rotate(180deg);
+    -ms-filter: "FlipH";
+    -o-transform: rotate(180deg) scaleX(-1);
+    transform: rotate(180deg) scaleX(-1);
+}
+
+.snake-direction-left.snake-mirror-vertical {
+    -webkit-transform: rotate(90deg) scaleX(-1);
+    -moz-transform: rotate(90deg) scaleX(-1);
+    -ms-transform: rotate(90deg);
+    -ms-filter: "FlipV";
+    -o-transform: rotate(90deg) scaleX(-1);
+    transform: rotate(90deg) scaleX(-1);
+}
+.snake-direction-down.snake-mirror-vertical {
+    -webkit-transform: rotate(0deg) scaleY(-1);
+    -moz-transform: rotate(0deg) scaleY(-1);
+    -ms-transform: rotate(0deg);
+    -ms-filter: "FlipV";
+    -o-transform: rotate(0deg) scaleY(-1);
+    transform: rotate(0deg) scaleY(-1);
+}
+.snake-direction-right.snake-mirror-vertical {
+    -webkit-transform: rotate(-90deg) scaleX(-1);
+    -moz-transform: rotate(-90deg) scaleX(-1);
+    -ms-transform: rotate(-90deg);
+    -ms-filter: "FlipV";
+    -o-transform: rotate(-90deg) scaleX(-1);
+    transform: rotate(-90deg) scaleX(-1);
+}
+.snake-direction-up.snake-mirror-vertical {
+    -webkit-transform: rotate(180deg) scaleY(-1);
+    -moz-transform: rotate(180deg) scaleY(-1);
+    -ms-transform: rotate(180deg);
+    -ms-filter: "FlipV";
+    -o-transform: rotate(180deg) scaleY(-1);
+    transform: rotate(180deg) scaleY(-1);
+}
+
+/*
+.snake-mirror-horizontal {
+    -webkit-transform: scaleX(-1);
+    -moz-transform: scaleX(-1);
+    -ms-filter: "FlipH";
+    -o-transform: scaleX(-1);
+    transform: scaleX(-1);
+    filter: FlipH;
+}
+.snake-mirror-vertical {
+    -webkit-transform: scaleY(-1);
+    -moz-transform: scaleY(-1);
+    -ms-filter: "FlipV";
+    -o-transform: scaleY(-1);
+    transform: scaleY(-1);
+    filter: FlipV;
+}
+*/
+
 /* Debug console */
 .div-debug{
     font-family:Monospace;
