@@ -70,6 +70,9 @@ function Board(w, h, styleclass, id) {
           DOWN = 2,          RIGHT = 3,
           NO_DIR = -1,
 
+          HORIZONTAL = 1,    VERTICAL = 2,
+          NO_MIRROR = -1,
+
           HEAD = 0,          BODY = 1,
           TURN_L = 2,        TURN_R = 3,
           TAIL = 4,          MOUTH = 5,
@@ -482,7 +485,8 @@ function Board(w, h, styleclass, id) {
             // style new last segment to a tail
             this.snake[new_tail_idx].setToTail();
         }
-        this.snake[new_head_idx].setToHead(direction, use_tongue, open_mouth);
+        // this.snake[new_head_idx].setToHead(direction, use_tongue, open_mouth);
+        this.snake[new_head_idx].setToHeadAlwaysUp(direction, this.snake[old_head_idx].dir, this.snake[old_head_idx].mirror, use_tongue, open_mouth);
         this.snake[new_head_idx].setPosition(head_pos);
         if (death) {
             this.max_z_increment += 1;
@@ -711,8 +715,8 @@ function Board(w, h, styleclass, id) {
     }
 
     // define SmartBox constructor (box that moves, changes in every iteration and dies after timeout)
-    function SmartBox(pos, side, dir, images, z_index, ttl, movement, w, h, id) {
-        Box.call(this, pos, side, dir, images[0] || images, z_index, id);
+    function SmartBox(pos, side, dir, images, z_index, ttl, movement, w, h, id, mirror) {
+        Box.call(this, pos, side, dir, images[0] || images, z_index, id, mirror);
         this.ttl = ttl;
         this.is_static = movement.x === 0 && movement.y === 0;
         this.movement = movement;
@@ -755,15 +759,15 @@ function Board(w, h, styleclass, id) {
             // return a deep copy of the current box, changing only its id, and add it to the container
             var box = new SmartBox(new Position(this.pos.x, this.pos.y), this.side,
                                    this.dir, this.image, this.z_index, this.ttl, this.movement,
-                                   this.max_pos.x + 1, this.max_pos.y + 1, id);
+                                   this.max_pos.x + 1, this.max_pos.y + 1, id, this.mirror);
             box.createBox(container);
             return box;
         }
     }
 
     // define SnakeBox constructor (boxes that make the snake: can be fat or not and offers functions to change form head to body, etc.)
-    function SnakeBox(pos, side, dir, image, z_index, id) {
-        Box.call(this, pos, side, dir, image, z_index, id);
+    function SnakeBox(pos, side, dir, image, z_index, id, mirror) {
+        Box.call(this, pos, side, dir, image, z_index, id, mirror);
 
         this.makeFat = function(fat) {
             // makes snake segment fat (or unfat if set to false)
@@ -775,6 +779,41 @@ function Board(w, h, styleclass, id) {
         this.setToHead = function(dir, tongue, open_mouth) {
             // set box style to head
             this.dir = dir;
+            this.image = HEAD; //head
+            if (tongue === true) {
+                this.image = HEAD_TONGUE; //head with tongue
+            } else if (open_mouth === true) {
+                this.image = MOUTH; //head with open mouth
+            }
+            this.fat = false; //make sure a new head is not fat unless purposely set later
+            this.updateClass();
+        }
+        this.setToHeadAlwaysUp = function(dir, prev_dir, prev_mirror, tongue, open_mouth) {
+            // set box style to head. Avoids snake ever being upside down (used for styles where the snake is seen from the side)
+            this.dir = dir;
+            if (prev_dir === dir) {
+                this.mirror = prev_mirror;
+            } else {
+                this.mirror = NO_MIRROR; //reset mirror
+                switch (dir) {
+                    case RIGHT:
+                        this.mirror = VERTICAL;
+                    case UP:
+                        console.log("Up -->");
+                        if (prev_dir === LEFT) {
+                            // 
+                            console.log("Left");
+                        } else {
+                            console.log("Right");
+                        }
+                    case DOWN:
+                        if (prev_dir === RIGHT) {
+                            this.mirror = HORIZONTAL;
+                            console.log("Correction");
+                        }
+                }
+            }
+            console.log(this.mirror, dir, prev_dir, prev_mirror);
             this.image = HEAD; //head
             if (tongue === true) {
                 this.image = HEAD_TONGUE; //head with tongue
@@ -797,6 +836,7 @@ function Board(w, h, styleclass, id) {
                     } else {
                         this.image = TURN_L_FAT; //turn left fat after eating
                     }
+                    this.mirror = NO_MIRROR;
                 }
             } else {
                 if (head_dir == this.dir) {
@@ -808,6 +848,7 @@ function Board(w, h, styleclass, id) {
                     } else {
                         this.image = TURN_L; //turn left
                     }
+                    this.mirror = NO_MIRROR;
                 }
             }
             this.updateClass();
@@ -829,14 +870,14 @@ function Board(w, h, styleclass, id) {
         this.clone = function(container, id) {
             // return a deep copy of the current box, changing only its id, and add it to the container
             var box = new SnakeBox(new Position(this.pos.x, this.pos.y), this.side,
-                                   this.dir, this.image, this.z_index, id);
+                                   this.dir, this.image, this.z_index, id, this.mirror);
             box.createBox(container);
             return box;
         }
     }
 
     // define cell constructor
-    function Box(pos, side, dir, image, z_index, id) {
+    function Box(pos, side, dir, image, z_index, id, mirror) {
         this.pos = pos;                 //(x,y) position in board
         this.px_pos = new Position(pos.x * side, pos.y * side); //px position
         this.side = side;               //px, width/height of every box
@@ -846,6 +887,8 @@ function Board(w, h, styleclass, id) {
         this.imageclass = "";           //class for box image
         this.dir = dir;                 //0:up, 1:left, 2:down, 3:right
         this.dirclass = "";             //class for image orientation
+        this.mirror = mirror;           //1:horizontal, 2:vertical
+        this.mirrorclass = "";          //class for image orientation
         this.fat = false;               //whether a snake segment is fat (has eaten food) or not
         this.id = id;                   //unique id of the box
         this.element;                   //element in the document
@@ -880,6 +923,16 @@ function Board(w, h, styleclass, id) {
                 default:
                     this.dirclass = "";
                     separator = "";
+            }
+            switch (this.mirror) {
+                case VERTICAL: //Vertical mirroring
+                    this.mirrorclass = " snake-mirror-vertical";
+                    break;
+                case HORIZONTAL: //Horizontal mirroring
+                    this.mirrorclass = " snake-mirror-horizontal";
+                    break;
+                default:
+                    this.mirrorclass = "";
             }
             switch (this.image) {
                 case HEAD: //Head
@@ -951,7 +1004,7 @@ function Board(w, h, styleclass, id) {
                 default: //Error
                     this.imageclass = "snake-snakebody-error";
             }
-            this.element.className = "snake-box " + this.imageclass + separator + this.dirclass;
+            this.element.className = "snake-box " + this.imageclass + separator + this.dirclass + this.mirrorclass;
         }
         this.updatePosition = function() {
             // update px_pos and the box position according to this.pos
@@ -999,7 +1052,7 @@ function Board(w, h, styleclass, id) {
         this.clone = function(container, id) {
             // return a deep copy of the current box, changing only its id, and add it to the container
             var box = new Box(new Position(this.pos.x, this.pos.y), this.side,
-                              this.dir, this.image, this.z_index, id);
+                              this.dir, this.image, this.z_index, id, this.mirror);
             box.createBox(container);
             return box;
         }
