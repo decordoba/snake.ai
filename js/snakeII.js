@@ -64,6 +64,7 @@ function Board(w, h, styleclass, id) {
     this.stacked_positions = {};    //when snake grows, cell position with more than one snake segment
     this.stacked_number = 0;        //number of stacked segments in stacked_positions
     this.max_z_increment = 0;       //monitorizes max z-index for boxes, so head is always on top
+    this.snake_from_top = false;    //in the original snake EX2, the snake is seen from the side (set to false to play game as in original)
     
     // initialize constants
     const UP = 0,            LEFT = 1,
@@ -97,7 +98,8 @@ function Board(w, h, styleclass, id) {
         var i, image, side, me = this;
         this.resetGrid();
         this.createBoard();
-        image = this.getBoxImage(HEAD); //set this.side to width of head box image
+        //set this.side to width of head box image
+        image = this.getBoxImage(HEAD);
         image.onload = function() {
             side = me.getImageSide(image);
             me.loadBoard(side, obstacles, num_food);
@@ -114,8 +116,6 @@ function Board(w, h, styleclass, id) {
         this.addObstacles(obstacles);
         this.initSnake();
         this.initTongue();
-        // this.setPosToFood(new Position(8, 2), 0);
-        // this.setPosToFood(new Position(9, 2), 1);
         if (num_food == undefined || num_food < 2) {
             this.addRandomFood();
         } else {
@@ -426,7 +426,7 @@ function Board(w, h, styleclass, id) {
             }
         }
         pos_ok = false;
-        while (!pos_ok) {
+        while (!pos_ok && pos !== undefined) {
             pos_ok = true;
             for (i=0; i<ko_positions.length; i++) {
                 if (pos.compare(ko_positions[i])) {
@@ -436,8 +436,12 @@ function Board(w, h, styleclass, id) {
                 }
             }
         }
-        this.food[idx].setPosition(pos);
-        this.addFoodToGrid(pos);
+        if (pos !== undefined) {
+            this.food[idx].setPosition(pos);
+            this.addFoodToGrid(pos);
+        } else {
+            console.log("You win!");
+        }
     }
     this.moveSnake = function(old_head_idx, new_head_idx, direction, use_tongue, growth) {
         // move snake towards direction, save new head in old tail and move its position, so it seems that snake moves
@@ -485,8 +489,11 @@ function Board(w, h, styleclass, id) {
             // style new last segment to a tail
             this.snake[new_tail_idx].setToTail();
         }
-        // this.snake[new_head_idx].setToHead(direction, use_tongue, open_mouth);
-        this.snake[new_head_idx].setToHeadAlwaysUp(direction, this.snake[old_head_idx].dir, this.snake[old_head_idx].mirror, use_tongue, open_mouth);
+        if (this.snake_from_top) {
+            this.snake[new_head_idx].setToHead(direction, use_tongue, open_mouth);
+        } else {
+            this.snake[new_head_idx].setToHeadAlwaysUp(direction, this.snake[old_head_idx].dir, this.snake[old_head_idx].image, this.snake[old_head_idx].mirror, use_tongue, open_mouth);
+        }
         this.snake[new_head_idx].setPosition(head_pos);
         if (death) {
             this.max_z_increment += 1;
@@ -588,10 +595,30 @@ function Board(w, h, styleclass, id) {
     }
     this.findRandomFreePosition = function() {
         // find position in grid that is empty. Warning, keeps searching forever
-        var pos = new Position(Math.floor(Math.random() * this.w), Math.floor(Math.random() * this.h));
-        while (this.getGridValue(pos) !== GRID_EMPTY) {
+        var pos = new Position(Math.floor(Math.random() * this.w), Math.floor(Math.random() * this.h)),
+            attempts = 0, max_attempts = this.w * this.h * 1000, x, y, found = false;
+        while (this.getGridValue(pos) !== GRID_EMPTY && attempts < max_attempts) {
             pos.x = Math.floor(Math.random() * this.w);
             pos.y = Math.floor(Math.random() * this.h);
+            attempts++;
+        }
+        if (attempts >= max_attempts) { // makes sure no available spot exists
+            for (x=0; x<this.w; x++) {
+                for (y=0; y<this.h; y++) {
+                    pos.x = x;
+                    pos.y = y;
+                    if (this.getGridValue(pos) === GRID_EMPTY) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+            if (!found) {
+                return undefined;
+            }
         }
         return pos;
     }
@@ -603,7 +630,7 @@ function Board(w, h, styleclass, id) {
         new_box = this.addBox(pos, NO_DIR, FOOD, Z_FOOD, "snake_food_" + idx);
         this.food.push(new_box);
     }
-    this.setPosToFood = function(pos, idx) {
+    this.setFoodPos = function(pos, idx) {
         // create food element and place it in a position pos
         var new_box;
         this.addFoodToGrid(pos);
@@ -620,7 +647,7 @@ function Board(w, h, styleclass, id) {
         this.food.push(new_box);
         this.tmp_food.push(new_box);
     }
-    this.setPosToTemporaryFood = function(pos, ttl, movement, idx) {
+    this.setTemporaryFoodPos = function(pos, ttl, movement, idx) {
         // create food element and place it in a position pos
         var new_box;
         this.addTemporaryFoodToGrid(pos);
@@ -788,32 +815,24 @@ function Board(w, h, styleclass, id) {
             this.fat = false; //make sure a new head is not fat unless purposely set later
             this.updateClass();
         }
-        this.setToHeadAlwaysUp = function(dir, prev_dir, prev_mirror, tongue, open_mouth) {
+        this.setToHeadAlwaysUp = function(dir, prev_dir, prev_img, prev_mirror, tongue, open_mouth) {
             // set box style to head. Avoids snake ever being upside down (used for styles where the snake is seen from the side)
             this.dir = dir;
-            if (prev_dir === dir) {
-                this.mirror = prev_mirror;
-            } else {
-                this.mirror = NO_MIRROR; //reset mirror
-                switch (dir) {
-                    case RIGHT:
-                        this.mirror = VERTICAL;
-                    case UP:
-                        console.log("Up -->");
-                        if (prev_dir === LEFT) {
-                            // 
-                            console.log("Left");
-                        } else {
-                            console.log("Right");
-                        }
-                    case DOWN:
-                        if (prev_dir === RIGHT) {
-                            this.mirror = HORIZONTAL;
-                            console.log("Correction");
-                        }
-                }
+
+            this.mirror = NO_MIRROR; //reset mirror
+            switch (dir) {
+                case RIGHT:
+                    this.mirror = VERTICAL;
+                    break;
+                case UP:
+                case DOWN:
+                    if (prev_img === TURN_L || prev_img === TURN_L_FAT) {
+                        this.mirror = HORIZONTAL;
+                    } else if (dir === prev_dir && (prev_img === BODY || prev_img === BODY_FAT)) {
+                        this.mirror = prev_mirror;
+                    }
+                    break;
             }
-            console.log(this.mirror, dir, prev_dir, prev_mirror);
             this.image = HEAD; //head
             if (tongue === true) {
                 this.image = HEAD_TONGUE; //head with tongue
@@ -836,7 +855,7 @@ function Board(w, h, styleclass, id) {
                     } else {
                         this.image = TURN_L_FAT; //turn left fat after eating
                     }
-                    this.mirror = NO_MIRROR;
+                    this.mirror = NO_MIRROR; //in a turn, remove mirrors
                 }
             } else {
                 if (head_dir == this.dir) {
@@ -848,7 +867,7 @@ function Board(w, h, styleclass, id) {
                     } else {
                         this.image = TURN_L; //turn left
                     }
-                    this.mirror = NO_MIRROR;
+                    this.mirror = NO_MIRROR; //in a turn, remove mirrors
                 }
             }
             this.updateClass();
@@ -1223,7 +1242,13 @@ function Snake(board, keys, speed, AI, growth, numFood) {
         tmp = this.board.moveSnake(this.head, this.tail, this.direction, use_tongue, this.growth);
         this.head = tmp.head;
         this.tail = tmp.tail;
-        this.useTongueUpdate();
+        // update this.useTongue variable. Makes sure that we cannot use tongue all the time
+        if (this.useTongue > 0) {
+            this.useTongue += 1;
+            if (this.useTongue >= 3) { //3 => User can only use tongue every 1 of 2 moves
+                this.useTongue = 0;
+            }
+        }
         if (this.showDebug) {
             if (this.debugElement === undefined) {
                 this.debugElement = document.createElement("div");
@@ -1252,24 +1277,17 @@ function Snake(board, keys, speed, AI, growth, numFood) {
         
         this.scheduleNextStep();
     }
-    this.useTongueUpdate = function() {
-        // updates this.useTongue variable. Makes sure that we cannot use tongue all the time
-        if (this.useTongue > 0) {
-            this.useTongue += 1;
-            if (this.useTongue >= 3) { //3 => User can only use tongue every 1 of 2 moves
-                this.useTongue = 0;
-            }
-        }
-    }
 }
 
 /*
 TODO:
     1. Problem when food bounces with other moving food (more noticable when they are going in perpendicular dir)
   1.5. I will probably have to rethink all the grid system, so everything happens at the same time (right now, the food moves first, then the snake, and if we eat food, it can only appear in current grid, not in future grid after movement)
+    2. Careful, regular food may disappear from grid if moving food disappears exactly when bouncing
     3. Add obstacles with shapes (so they look like walls) --> modify so they are like original (lights and shades)
     6. Make nice looking snake
   7.5. Handle case where there is no room for new food
+  7.7. Make open mouth more noticable
   7.6. Change head so that it opens mouth when about to eat sth (attention tongue)
   7.7. Change color when dying / make snake blink when death
   7.8. Make sure tongue works fine even when dying and showing tongue, mouth open and tongue, etc
